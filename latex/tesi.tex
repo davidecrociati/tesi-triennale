@@ -106,10 +106,9 @@
 
 % LISTA DEI CAPITOLI DA INCLUDERE - PERSONALIZZARE
 \includeonly{%
-chap_qui,%
-chap_quo,%
-chap_qua,%
-app_a,%
+capitolo1,
+capitolo2%,
+%app_a,%
 }
 
 % FILE DI BIBLIOGRAFIA
@@ -215,12 +214,6 @@ Citatemi dicendo che sono stato citato male.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% RINGRAZIAMENTI - PERSONALIZZARE
-\ringraziamenti
-Grazie a Grazia, Graziella e la sorella.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 % ABSTRACT - PERSONALIZZARE
 \sommario
 Piacere, sommario.
@@ -246,13 +239,18 @@ Piacere, sommario.
 \mainmatter
 
 % INCLUSIONE FILE CAPITOLI - PERSONALIZZARE - TENERE COERENTE CON LISTA IN ALTO
-\include{chap_qui}
-\include{chap_quo}
-\include{chap_qua}
+\include{capitolo1}
+\include{capitolo2}
 
-\appendix
+%\appendix
 % INCLUSIONE APPENDICI - - PERSONALIZZARE - TENERE COERENTE CON LISTA IN ALTO
-\include{app_a}
+%\include{app_a}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% RINGRAZIAMENTI - PERSONALIZZARE
+\ringraziamenti
+Grazie a Grazia, Graziella e la sorella.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
