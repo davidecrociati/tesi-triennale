@@ -1,0 +1,3 @@
+1. cargo new nomeProgetto
+2. cargo build --target wasm32-wasi
+3. wasmtime target/wasm32-wasi/debug/hello-world.wasm
