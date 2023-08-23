@@ -12,7 +12,7 @@
 <body>
     <nav class="navbar navbar-light" style="background-color: #79a6c7;">
         <div class="container-fluid">
-            <a class="navbar-brand">Image processing</a>
+            <a class="navbar-brand">Simple Image processing</a>
         </div>
     </nav>
 
@@ -23,20 +23,40 @@
                 <form id="fileForm">
                     <div class="mb-3 mt-4">
                         <label for="formFileLg" class="form-label">Carica Immagine sul Server</label>
-                        <input accept="image/*" class="form-control form-control-lg" id="formFileLg" type="file">
+                        <input type="file" accept="image/*" class="form-control form-control-lg" id="formFileLg" >
                     </div>
                     <fieldset id="editing" disabled="disabled">
                         <div class="mb-3">
-                            <label for="height" class="form-label">Ridimensiona</label>
-                            <input type="number" class="form-control" id="height" placeholder="altezza">
-                            <input type="number" class="form-control mt-1" id="width" placeholder="larghezza">
+                            <label for="scala" class="form-label">Scala</label>
+                            <input type="number" value="1"  class="form-control" id="scala" name="scala" placeholder="Fattore di scala" min="0" max="1" step="0.05">
                         </div>
+                        <div class="form-check mb-3">
+                            <input type="checkbox"  class="form-check-input" value="true" id="ruota" name="ruota">
+                            <label class="form-check-label" for="ruota">
+                              Ruota di 90 °
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" value="true" id="specchia" name="specchia">
+                            <label class="form-check-label" for="specchia">
+                              Specchia orizzontalmente
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" value="true" id="bw" name="bw">
+                            <label class="form-check-label" for="bw">
+                              Converti in Bianco e Nero
+                            </label>
+                        </div>                        
                         <div class="mb-3">
-                            <label for="BW" class="form-label">Ridimensiona</label>
-                            <input type="number" class="form-control" id="BW" placeholder="altezza">
-                            <input type="number" class="form-control mt-1" id="width" placeholder="larghezza">
+                            <label for="contrasto" class="form-label">Cambia contrasto</label>
+                            <input type="number" value="0"  class="form-control" id="contrasto" name="contrasto" placeholder="contrasto" min="-1" max="1" step="0.05">
+                        </div>                        
+                        <div class="mb-3">
+                            <label for="luminosita" class="form-label">Cambia luminosità</label>
+                            <input type="number" value="0" class="form-control" id="luminosita" name="luminosita" placeholder="luminosita" min="-1" max="1" step="0.05">
                         </div>
-                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="button" id="editButton" class="btn btn-primary">Modifica</button>
                     </fieldset>
                 </form>
             </div>

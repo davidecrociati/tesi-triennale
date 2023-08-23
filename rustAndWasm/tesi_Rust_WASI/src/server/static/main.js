@@ -3,7 +3,7 @@ $(document).ready( function(){
     $('input:file').on("change", function() {
         filename = this.files.item(0).name;
         $('#editing').prop('disabled', false);
-        $('#imagePre').prop('hidden', false);
+        $('#centralColumn').prop('hidden', false);
 
         const [file] = this.files
         if (file) {
@@ -18,15 +18,23 @@ $(document).ready( function(){
             data: image,
             contentType: false,
             processData: false,
-            dataType: "html",
             success: function(response) {
-                console.log("File upload submitted successfully");
+                console.log(response);
             }
         });
 
     });
 
-    $('#fileForm').on("submit", function(){
-        
+    $('#editButton').on("click", function(){
+        console.log($("#fileForm").serialize());
+        $.ajax({
+            url: "/edit",
+            method: "POST",
+            data: $("#fileForm").serialize(),
+            dataType: "html",
+            success: function(data) {
+                console.log("File upload submitted successfully");
+            }
+        });
     });
 });
