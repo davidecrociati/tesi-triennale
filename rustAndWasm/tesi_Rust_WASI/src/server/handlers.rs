@@ -2,12 +2,12 @@ use actix_web::{web, HttpResponse, Result};
 use actix_multipart::Multipart;
 use futures_util::stream::StreamExt;
 use std::io::Write;
-use tempfile::NamedTempFile; // Requires "tempfile" crate
+use tempfile::NamedTempFile; 
 
 pub async fn index() -> HttpResponse {
     HttpResponse::Ok()
         .content_type("text/html")
-        .body(include_str!("..\\client\\index.html"))
+        .body(include_str!("..\\static\\index.html"))
 }
 
 pub async fn upload(mut payload: Multipart) -> HttpResponse {
