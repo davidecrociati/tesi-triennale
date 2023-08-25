@@ -13,7 +13,7 @@ $(document).ready( function(){
         image.append("image",this.files.item(0));
         // Send AJAX request for file upload
         $.ajax({
-            url: "/upload",
+            url: "upload",
             method: "POST",
             data: image,
             contentType: false,
