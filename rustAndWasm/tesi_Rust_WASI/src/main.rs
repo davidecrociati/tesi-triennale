@@ -13,7 +13,6 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .route("/", web::get().to(server::handlers::index))
             .route("/upload", web::post().to(server::handlers::upload))
-            .route("/edit", web::post().to(server::handlers::edit))
             .service(fs::Files::new("/script", "./src/static/"))
             .service(fs::Files::new("/img", "./img/"))
     })

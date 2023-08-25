@@ -26,35 +26,35 @@
                         <input type="file" accept="image/*" class="form-control form-control-lg" id="formFileLg" >
                     </div>
                     <fieldset id="editing" disabled="disabled">
-                        <div class="mb-3">
-                            <label for="scala" class="form-label">Scala</label>
-                            <input type="number" value="1"  class="form-control" id="scala" name="scala" placeholder="Fattore di scala" min="0" max="1" step="0.05">
-                        </div>
                         <div class="form-check mb-3">
-                            <input type="checkbox"  class="form-check-input" value="true" id="ruota" name="ruota">
+                            <input type="checkbox"  class="form-check-input" id="ruota" name="ruota">
                             <label class="form-check-label" for="ruota">
                               Ruota di 90 °
                             </label>
                         </div>
                         <div class="form-check mb-3">
-                            <input type="checkbox" class="form-check-input" value="true" id="specchia" name="specchia">
+                            <input type="checkbox" class="form-check-input" id="specchia" name="specchia">
                             <label class="form-check-label" for="specchia">
                               Specchia orizzontalmente
                             </label>
                         </div>
                         <div class="form-check mb-3">
-                            <input type="checkbox" class="form-check-input" value="true" id="bw" name="bw">
+                            <input type="checkbox" class="form-check-input" id="bw" name="bw">
                             <label class="form-check-label" for="bw">
                               Converti in Bianco e Nero
                             </label>
-                        </div>                        
+                        </div>   
+                        <div class="mb-3">
+                            <label for="scala" class="form-label">Scala</label>
+                            <input type="number" value="1"  class="form-control" id="scala" name="scala" placeholder="Fattore di scala" min="0" max="1" step="0.05" required>
+                        </div>                     
                         <div class="mb-3">
                             <label for="contrasto" class="form-label">Cambia contrasto</label>
-                            <input type="number" value="0"  class="form-control" id="contrasto" name="contrasto" placeholder="contrasto" min="-1" max="1" step="0.05">
+                            <input type="number" value="0"  class="form-control" id="contrasto" name="contrasto" placeholder="contrasto" min="-1" max="1" step="0.05" required>
                         </div>                        
                         <div class="mb-3">
                             <label for="luminosita" class="form-label">Cambia luminosità</label>
-                            <input type="number" value="0" class="form-control" id="luminosita" name="luminosita" placeholder="luminosita" min="-1" max="1" step="0.05">
+                            <input type="number" value="0" class="form-control" id="luminosita" name="luminosita" placeholder="luminosita" min="-1" max="1" step="0.05" required>
                         </div>
                         <button type="button" id="editButton" class="btn btn-primary">Applica modifiche</button>
                     </fieldset>

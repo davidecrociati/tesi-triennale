@@ -1,21 +1,25 @@
 use actix_web::{web, HttpResponse};
-use actix_multipart::form::{MultipartForm, tempfile::TempFile};
-use std::path::PathBuf;
-use std::env;
+use actix_multipart::form::{MultipartForm, tempfile::TempFile,text::Text};
 
 #[derive(MultipartForm)]
 pub struct ImageUpload {
-    image: TempFile
+    image: TempFile,
+    scala: Text<f32>,
+    ruota: Text<bool>,
+    specchia: Text<bool>,
+    bw: Text<bool>,
+    contrasto: Text<f32>,
+    luminosita: Text<f32>,
+    file_name: Text<String>
 }
-
-#[derive(serde::Deserialize)]
-pub struct FormData {
+pub struct Editings{
     scala: f32,
     ruota: bool,
     specchia: bool,
     bw: bool,
     contrasto: f32,
-    luminosita: f32
+    luminosita: f32,
+    file_name: String
 }
 
 pub async fn index() -> HttpResponse {
@@ -26,21 +30,23 @@ pub async fn index() -> HttpResponse {
 
 
 pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
-    let file_name: &str = form
-        .0
-        .image
-        .file_name
-        .as_ref()
-        .map(|m| m.as_ref())
-        .unwrap_or("null");
-    
-    let filepath = format!("img\\uploaded\\{}", file_name);
-    println!("Tryng to upload: {}...", file_name);
-
+    let filepath = format!("img\\uploaded\\{}", form.0.file_name.as_str());
+    println!("Tryng to upload: {:?}...", form.0.file_name);
+    println!("scala: {:?}, ruota: {:?},specchia: {:?}, bw: {:?},contrasto: {:?}, luminosita: {:?}", form.0.scala, form.0.ruota, form.0.specchia, form.0.bw, form.0.contrasto, form.0.luminosita );
     match form.0.image.file.persist(filepath) {
         Ok(_) => {
             println!("Image upload done.");
-            HttpResponse::Ok().finish()
+            
+            let editings = Editings{
+                scala : form.0.scala.0,
+                ruota : form.0.ruota.0,
+                specchia : form.0.specchia.0,
+                bw : form.0.bw.0,
+                contrasto : form.0.contrasto.0,
+                luminosita : form.0.luminosita.0,
+                file_name : form.0.file_name.0
+            };
+            edit(editings)
         },
         Err(e) => {
             println!("Error: {}", e.to_string());
@@ -49,9 +55,6 @@ pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
     }
 }
 
-pub async fn edit(info: web::Form<FormData>) -> HttpResponse {
-    println!("scala:{}, contrasto:{}, luminosita:{}",info.scala, info.contrasto, info.luminosita);
-    println!("ruota:{}, specchia:{}, bw:{}",info.ruota, info.specchia, info.bw);
+pub fn edit(e : Editings) -> HttpResponse{
     HttpResponse::Ok().finish()
 }
-

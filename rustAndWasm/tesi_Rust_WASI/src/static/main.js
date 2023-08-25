@@ -1,40 +1,39 @@
 $(document).ready( function(){
     var filename = "";
     $('input:file').on("change", function() {
-        filename = this.files.item(0).name;
-        $('#editing').prop('disabled', false);
-        $('#centralColumn').prop('hidden', false);
-
         const [file] = this.files
         if (file) {
           imagePre.src = URL.createObjectURL(file)
         }
-        var image = new FormData();
-        image.append("image",this.files.item(0));
-        // Send AJAX request for file upload
-        $.ajax({
-            url: "upload",
-            method: "POST",
-            data: image,
-            contentType: false,
-            processData: false,
-            success: function(response) {
-                console.log(response);
-            }
-        });
-
+        $('#editing').prop('disabled', false);
+        $('#centralColumn').prop('hidden', false);
     });
 
     $('#editButton').on("click", function(){
-        console.log($("#fileForm").serialize());
+        var image = $('#formFileLg')[0].files[0];
+        
+        var form = new FormData($('#fileForm')[0]);
+
+        form.append("image", image);
+        form.append("file_name", image.name)
+        if(!$('#specchia').prop('checked')) form.append("specchia", "false");
+        if(!$('#ruota').prop('checked')) form.append("ruota", "false");
+        if(!$('#bw').prop('checked')) form.append("bw", "false");
+
         $.ajax({
-            url: "/edit",
+            url: "/upload",
             method: "POST",
-            data: $("#fileForm").serialize(),
+            data: form,
+            processData: false,
+            contentType: false,
             dataType: "html",
             success: function(data) {
-                console.log("File upload submitted successfully");
-            }
+                $('#rightColumn').prop('hidden', false);
+
+            },
+            error: function(jqxhr, textStatus, errorThrown){
+                alert("textStatus: "+textStatus+", error: "+errorThrown);
+            } 
         });
     });
 });
