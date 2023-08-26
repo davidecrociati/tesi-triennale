@@ -2,7 +2,7 @@ use image::{DynamicImage, ImageFormat};
 
 fn main() {
     // Open an image file
-    let img: DynamicImage = image::open("iamges/3.jpg").expect("Failed to open image");
+    let img: DynamicImage = image::open("images/3.jpg").expect("Failed to open image");
 
     // Resize the grayscale image to 400x600
     //let resized_img = img.resize_exact(400, 600, image::imageops::FilterType::Lanczos3);

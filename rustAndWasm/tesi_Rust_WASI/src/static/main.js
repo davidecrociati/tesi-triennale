@@ -26,9 +26,10 @@ $(document).ready( function(){
             data: form,
             processData: false,
             contentType: false,
-            dataType: "html",
+            dataType: "text",
             success: function(data) {
                 $('#rightColumn').prop('hidden', false);
+                $('#imagePost').attr('src', data)
 
             },
             error: function(jqxhr, textStatus, errorThrown){

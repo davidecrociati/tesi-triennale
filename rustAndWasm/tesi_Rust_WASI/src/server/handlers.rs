@@ -1,6 +1,7 @@
 use actix_web::{web, HttpResponse};
 use actix_multipart::form::{MultipartForm, tempfile::TempFile,text::Text};
-
+use image::{DynamicImage, ImageFormat};
+use std::time::Instant;
 #[derive(MultipartForm)]
 pub struct ImageUpload {
     image: TempFile,
@@ -56,5 +57,28 @@ pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
 }
 
 pub fn edit(e : Editings) -> HttpResponse{
-    HttpResponse::Ok().finish()
+        let filepath = format!("img\\uploaded\\{}", e.file_name);
+
+        let mut now = Instant::now();
+        let img: DynamicImage = image::open(filepath).expect("Failed to open image");
+        let mut elapsed = now.elapsed();
+        println!("Elapsed time for opening: {:.2?}", elapsed);
+    
+        now = Instant::now();
+        let gray_img = img.grayscale();
+        elapsed = now.elapsed();
+        println!("Elapsed time for editing: {:.2?}", elapsed);
+
+        let modified_filepath = format!("img\\modified\\{}", e.file_name);
+        
+        now = Instant::now();
+        gray_img.save_with_format(&modified_filepath, ImageFormat::Jpeg).expect("Failed to save image");
+        elapsed = now.elapsed();
+        println!("Elapsed time for saving: {:.2?}", elapsed);
+
+    
+        HttpResponse::Ok()
+        .content_type("text/plain")
+        .body(modified_filepath)
+        
 }
