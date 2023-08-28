@@ -17,8 +17,11 @@ $(document).ready( function(){
         form.append("image", image);
         form.append("file_name", image.name)
         if(!$('#specchia').prop('checked')) form.append("specchia", "false");
+        else form.set('specchia',true);
         if(!$('#ruota').prop('checked')) form.append("ruota", "false");
+        else form.set('ruota',true);
         if(!$('#bw').prop('checked')) form.append("bw", "false");
+        else form.set('bw',true);
 
         $.ajax({
             url: "/upload",

@@ -1,7 +1,13 @@
 use actix_web::{web, HttpResponse};
 use actix_multipart::form::{MultipartForm, tempfile::TempFile,text::Text};
-use image::{DynamicImage, ImageFormat};
-use std::time::Instant;
+use serde::{Serialize,Deserialize};
+use anyhow::{Result, Context};
+use std::error::Error;
+use wasmtime::*;
+use wasmtime_wasi::*;
+use wasmtime_wasi::sync::Dir;
+use wasi_common::{pipe::ReadPipe, WasiCtx};
+use wasi::wasi_snapshot_preview1::*;
 #[derive(MultipartForm)]
 pub struct ImageUpload {
     image: TempFile,
@@ -10,16 +16,17 @@ pub struct ImageUpload {
     specchia: Text<bool>,
     bw: Text<bool>,
     contrasto: Text<f32>,
-    luminosita: Text<f32>,
+    luminosita: Text<i32>,
     file_name: Text<String>
 }
+#[derive(Serialize, Deserialize)]
 pub struct Editings{
     scala: f32,
     ruota: bool,
     specchia: bool,
     bw: bool,
     contrasto: f32,
-    luminosita: f32,
+    luminosita: i32,
     file_name: String
 }
 
@@ -33,10 +40,9 @@ pub async fn index() -> HttpResponse {
 pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
     let filepath = format!("img\\uploaded\\{}", form.0.file_name.as_str());
     println!("Tryng to upload: {:?}...", form.0.file_name);
-    println!("scala: {:?}, ruota: {:?},specchia: {:?}, bw: {:?},contrasto: {:?}, luminosita: {:?}", form.0.scala, form.0.ruota, form.0.specchia, form.0.bw, form.0.contrasto, form.0.luminosita );
     match form.0.image.file.persist(filepath) {
         Ok(_) => {
-            println!("Image upload done.");
+            println!("Image upload done.\n");
             
             let editings = Editings{
                 scala : form.0.scala.0,
@@ -47,6 +53,7 @@ pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
                 luminosita : form.0.luminosita.0,
                 file_name : form.0.file_name.0
             };
+            println!("recvd editings [scala: {:?}, ruota: {:?},specchia: {:?}, bw: {:?},contrasto: {:?}, luminosita: {:?}]", editings.scala, editings.ruota, editings.specchia, editings.bw, editings.contrasto, editings.luminosita );
             edit(editings)
         },
         Err(e) => {
@@ -56,29 +63,97 @@ pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
     }
 }
 
-pub fn edit(e : Editings) -> HttpResponse{
-        let filepath = format!("img\\uploaded\\{}", e.file_name);
+pub fn edit(e : Editings) -> HttpResponse {
+    //possibile passare parametri con env var, cmd line args or file
+    let serialized_input = serde_json::to_string(&e).unwrap();
+    println!("input for wasi: {}", serialized_input);
+    let stdin = ReadPipe::from(serialized_input);
+    //let stdout = WritePipe::new_in_memory();
 
-        let mut now = Instant::now();
-        let img: DynamicImage = image::open(filepath).expect("Failed to open image");
-        let mut elapsed = now.elapsed();
-        println!("Elapsed time for opening: {:.2?}", elapsed);
+    let engine = Engine::default();
     
-        now = Instant::now();
-        let gray_img = img.grayscale();
-        elapsed = now.elapsed();
-        println!("Elapsed time for editing: {:.2?}", elapsed);
+    let mut linker: Linker<WasiCtx> = Linker::new(&engine);
+    wasmtime_wasi::add_to_linker(&mut linker, |s| s).unwrap();
 
-        let modified_filepath = format!("img\\modified\\{}", e.file_name);
-        
-        now = Instant::now();
-        gray_img.save_with_format(&modified_filepath, ImageFormat::Jpeg).expect("Failed to save image");
-        elapsed = now.elapsed();
-        println!("Elapsed time for saving: {:.2?}", elapsed);
+    let  image_directory = Dir::open_ambient_dir("img", ambient_authority()).unwrap();
+    let builder = WasiCtxBuilder::new()
+    .stdin(Box::new(stdin.clone()))
+    //.stdout(Box::new(stdout.clone()))
+    .inherit_stdout()
+    .inherit_stderr()
+    .preopened_dir(image_directory,"img").unwrap();
 
+    let wasi = builder.build();
     
+    let module = Module::from_file(&engine, "src/server/image_proc_module.wasm").unwrap();
+    let mut store = Store::new(&engine, wasi);
+    
+    println!("\nimports: ");
+    let imp = module.imports();
+    for (j, val) in imp.into_iter().enumerate() {
+        println!("size: {}, mod: {}, name: {}", j, val.module(),val.name());
+    }
+    println!("\n");
+    match linker.module(&mut store, "", &module) {
+        Ok(_) => { /* Module loaded successfully */ },
+        Err(error) => {
+            eprintln!("Error loading module: {}", error);
+            /* Handle the error */
+        }
+    }
+
+    let instance = linker.instantiate(&mut store, &module).unwrap();
+    let instance_main = instance.get_typed_func::<(), ()>(&mut store, "_start").unwrap();
+    instance_main.call(&mut store, ()).unwrap();
+    /*
+    linker.get_default(&mut store, "image_proc_module.wasm").unwrap()
+        .typed::<(), ()>(&store).unwrap()
+        .call(&mut store, ()).unwrap();
+    */
+    drop(store);
         HttpResponse::Ok()
         .content_type("text/plain")
-        .body(modified_filepath)
+        .body("1.jpg")
+
         
+}
+
+//https://docs.wasmtime.dev/lang-rust.html
+pub fn invoke_wasm_module(e:Editings) -> Result<(), Box<dyn Error>>  {
+    //possibile passare parametri con env var, cmd line args or file
+    let serialized_input = serde_json::to_string(&e).unwrap();
+    println!("input for wasi: {}", serialized_input);
+    let stdin = ReadPipe::from(serialized_input);
+    //let stdout = WritePipe::new_in_memory();
+
+    let engine = Engine::default();
+    let mut linker: Linker<WasiCtx> = Linker::new(&engine);
+
+    let  image_directory = Dir::open_ambient_dir("img", ambient_authority()).unwrap();
+    let mut builder = WasiCtxBuilder::new()
+    .stdin(Box::new(stdin.clone()))
+    //.stdout(Box::new(stdout.clone()))
+    .inherit_stdout()
+    .inherit_stderr()
+    .preopened_dir(image_directory,"img").unwrap();
+
+    let wasi = builder.build();
+    let mut store = Store::new(&engine, wasi);
+    
+    let module = Module::from_file(&engine, "src/server/image_proc_module.wasm")?;
+    linker.module(&mut store, "", &module)?;
+    linker
+        .get_default(&mut store, "")?
+        .typed::<(), _>(&store)?
+        .call(&mut store, ())?;
+    
+    drop(store);
+    /* 
+    let contents: Vec<u8> = stdout.try_into_inner()
+        .map_err(|_err| anyhow::Error::msg("sole remaining reference"))?
+        .into_inner();
+    let output: Output = serde_json::from_slice(&contents)?;
+*/
+    Ok(())
+
 }
