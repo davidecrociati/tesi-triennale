@@ -1,7 +1,6 @@
 use actix_web::{web, App, HttpServer};
 use actix_files as fs;
 use env_logger;
-use wasi::wasi_snapshot_preview1::*;
 mod server{
     pub mod handlers;
 }

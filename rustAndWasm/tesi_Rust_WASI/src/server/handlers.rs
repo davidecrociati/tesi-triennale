@@ -1,13 +1,12 @@
-use actix_web::{web, HttpResponse};
+use actix_web::HttpResponse;
 use actix_multipart::form::{MultipartForm, tempfile::TempFile,text::Text};
 use serde::{Serialize,Deserialize};
-use anyhow::{Result, Context};
-use std::error::Error;
+//use anyhow::Result;
+//use std::error::Error;
 use wasmtime::*;
 use wasmtime_wasi::*;
 use wasmtime_wasi::sync::Dir;
 use wasi_common::{pipe::ReadPipe, WasiCtx};
-use wasi::wasi_snapshot_preview1::*;
 #[derive(MultipartForm)]
 pub struct ImageUpload {
     image: TempFile,
@@ -39,10 +38,10 @@ pub async fn index() -> HttpResponse {
 
 pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
     let filepath = format!("img\\uploaded\\{}", form.0.file_name.as_str());
-    println!("Tryng to upload: {:?}...", form.0.file_name);
+    println!("Tryng to upload: {:?}...", form.0.file_name.as_str());
     match form.0.image.file.persist(filepath) {
         Ok(_) => {
-            println!("Image upload done.\n");
+            println!("Image upload done.");
             
             let editings = Editings{
                 scala : form.0.scala.0,
@@ -66,7 +65,7 @@ pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
 pub fn edit(e : Editings) -> HttpResponse {
     //possibile passare parametri con env var, cmd line args or file
     let serialized_input = serde_json::to_string(&e).unwrap();
-    println!("input for wasi: {}", serialized_input);
+    println!("input for wasi module: {}", serialized_input);
     let stdin = ReadPipe::from(serialized_input);
     //let stdout = WritePipe::new_in_memory();
 
@@ -87,13 +86,7 @@ pub fn edit(e : Editings) -> HttpResponse {
     
     let module = Module::from_file(&engine, "src/server/image_proc_module.wasm").unwrap();
     let mut store = Store::new(&engine, wasi);
-    
-    println!("\nimports: ");
-    let imp = module.imports();
-    for (j, val) in imp.into_iter().enumerate() {
-        println!("size: {}, mod: {}, name: {}", j, val.module(),val.name());
-    }
-    println!("\n");
+
     match linker.module(&mut store, "", &module) {
         Ok(_) => { /* Module loaded successfully */ },
         Err(error) => {
@@ -105,19 +98,15 @@ pub fn edit(e : Editings) -> HttpResponse {
     let instance = linker.instantiate(&mut store, &module).unwrap();
     let instance_main = instance.get_typed_func::<(), ()>(&mut store, "_start").unwrap();
     instance_main.call(&mut store, ()).unwrap();
-    /*
-    linker.get_default(&mut store, "image_proc_module.wasm").unwrap()
-        .typed::<(), ()>(&store).unwrap()
-        .call(&mut store, ()).unwrap();
-    */
+    println!("\n\n");
     drop(store);
         HttpResponse::Ok()
         .content_type("text/plain")
-        .body("1.jpg")
+        .body(format!("img/modified/{}",e.file_name))
 
         
 }
-
+/*
 //https://docs.wasmtime.dev/lang-rust.html
 pub fn invoke_wasm_module(e:Editings) -> Result<(), Box<dyn Error>>  {
     //possibile passare parametri con env var, cmd line args or file
@@ -156,4 +145,4 @@ pub fn invoke_wasm_module(e:Editings) -> Result<(), Box<dyn Error>>  {
 */
     Ok(())
 
-}
+}*/

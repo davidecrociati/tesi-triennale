@@ -7,9 +7,11 @@ $(document).ready( function(){
         }
         $('#editing').prop('disabled', false);
         $('#centralColumn').prop('hidden', false);
+        $('#rightColumn').prop('hidden', true);
     });
 
     $('#editButton').on("click", function(){
+        $('#rightColumn').prop('hidden', true);
         var image = $('#formFileLg')[0].files[0];
         
         var form = new FormData($('#fileForm')[0]);
@@ -32,8 +34,7 @@ $(document).ready( function(){
             dataType: "text",
             success: function(data) {
                 $('#rightColumn').prop('hidden', false);
-                $('#imagePost').attr('src', data)
-
+                $('#imagePost').attr('src', data);
             },
             error: function(jqxhr, textStatus, errorThrown){
                 alert("textStatus: "+textStatus+", error: "+errorThrown);
