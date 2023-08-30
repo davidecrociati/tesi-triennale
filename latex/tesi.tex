@@ -65,6 +65,12 @@
 	numberstyle=\footnotesize,
 }
 
+\tolerance=1
+\emergencystretch=\maxdimen
+%\hyphenpenalty=10000
+%\hbadness=10000
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % FRENCHSPACING VA _SEMPRE_ ABILITATO PER DOCUMENTI IN ITALIANO
@@ -107,7 +113,8 @@
 % LISTA DEI CAPITOLI DA INCLUDERE - PERSONALIZZARE
 \includeonly{%
 capitolo1,
-capitolo2%,
+capitolo2,
+capitolo3
 %app_a,%
 }
 
@@ -180,8 +187,8 @@ capitolo2%,
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%INTERLINEA - DEFAULT 1 - NON ESAGERATE, NON SUPERATE MAI 1.3 ;)
-%\interlinea{1.2}
+%INTERLINEA - DEFAULT 1 
+\interlinea{1.5}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -199,18 +206,6 @@ A voi
 \cleardoublepage
 
 
-% CITAZIONE - PERSONALIZZARE
-% VSPACE - PROPORZIONE USATA PER CENTRATURA VERTICALE DEL TESTO
-% FLUSHRIGHT - ALLINEAMENTO ORIZZONTALE A DESTRA
-\vspace*{\stretch{1}}
-\begin{flushright}
-\noindent
-Citatemi dicendo che sono stato citato male.
-
-\textit{Groucho Marx}
-\end{flushright}
-\vspace*{\stretch{6}}
-\cleardoublepage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -241,6 +236,7 @@ Piacere, sommario.
 % INCLUSIONE FILE CAPITOLI - PERSONALIZZARE - TENERE COERENTE CON LISTA IN ALTO
 \include{capitolo1}
 \include{capitolo2}
+\include{capitolo3}
 
 %\appendix
 % INCLUSIONE APPENDICI - - PERSONALIZZARE - TENERE COERENTE CON LISTA IN ALTO
