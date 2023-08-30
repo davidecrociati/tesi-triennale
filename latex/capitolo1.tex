@@ -31,7 +31,32 @@ Tutto ciò non riguarda solo il lato client, ma coinvolge anche il lato server. 
 \newpage
 \section{Motivazioni e Obiettivi}
 \label{sec:Obiettivi}
+La crescente complessità delle applicazioni web e l'esigenza di offrire agli utenti esperienze interattive sempre più coinvolgenti hanno portato l'ambito dello sviluppo web a una svolta significativa. Le aspettative degli utenti si sono evolute verso applicazioni che offrano prestazioni reattive, interattività immediata e funzionalità avanzate. È proprio questo confronto a essere alla base delle motivazioni che hanno guidato la scelta del tema di questa tesi di laurea.
+In particolare, la presente ricerca si propone di esplorare in profondità il complesso equilibrio tra l'implementazione di funzionalità sofisticate (principalmente \textbf{CPU-Intensive}) e l'ottimizzazione delle prestazioni all'interno delle applicazioni web. Il fulcro di questa indagine sarà una comparazione dettagliata tra due approcci di sviluppo distinti per un'applicazione che consenta \textbf{l'elaborazione server-side di immagini} caricate da un utente.
+\\Tale tipologia di applicazione, si sposa bene per lo scopo finale della tesi: valutare come l'utilizzo del linguaggio di programmazione Rust con l'integrazione di WebAssembly (Wasm/WASI), e l'approccio basato su Node.js, affrontino il problema di un'applicazione web che svolga operazioni dall'alto costo computazionale, fornendo un'analisi approfondita delle performance e delle prestazioni riscontrate.
+Si intende esplorare le opportunità offerte da tecnologie quali WebAssembly e Node.js nell'ottica di un'ottimizzazione delle prestazioni. Questa ricerca mira a comprenderne i benefici specifici, individuando le situazioni in cui uno dei due approcci può risultare più vantaggioso in termini di efficienza computazionale e reattività.
+\begin{figure}
+        \begin{center}
+                \includegraphics[width=0.6\columnwidth]{images/imageProc.jpg}
+        \end{center}
+        \caption{Il campo dell'elaborazione digitale di immagini è molto ampio e sarebbe possibile integrare anche operazioni avanzate (edge detection, pattern recognition etc.) che richiederebbero risorse computazionali ancora maggiori, ma per lo scopo di questa tesi ci si limiterà a elaborazioni più semplici.}
+        \label{fig:spa}
+\end{figure}
 \subsection{Analisi Comparativa delle Tecnologie}
+Si partirà con un analisi comparativa delle due tecnologie, presentando i vantaggi e gli svantaggi teorici di entrambe.
+\begin{figure}
+        \centering
+        \begin{minipage}{0.40\textwidth}
+            \centering
+            \includegraphics[width=0.9\textwidth]{images/rustwasm.jpg} % first figure itself
+            \caption{Rust + Wasm}
+        \end{minipage}\hfill
+        \begin{minipage}{0.40\textwidth}
+            \centering
+            \includegraphics[width=0.9\textwidth]{images/node.png} % second figure itself
+            \caption{Node.js}
+        \end{minipage}
+    \end{figure}
 \subsection{Valutazione dell'Impatto di Wasm}
 
 
