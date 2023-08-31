@@ -4,11 +4,11 @@
 \section{Contestualizzazione}
 \label{sec:Contestualizzazione}
 
-\subsection{Evoluzione delle applicazioni web}
+\subsection{Trend di evoluzione del web}
 Inizialmente le applicazioni web erano costituite da semplici pagine statiche contenenti testo e immagini.
 Col passare degli anni, grazie all'adozione di JavaScript e di librerie e framework correlati, hanno progressivamente acquisito un carattere più dinamico, con l'introduzione di livelli crescenti di interattività. 
 Un cambiamento significativo in tal senso, è avvenuto con l'avvento delle \textbf{Single Page Application (SPA)} e di \textbf{AJAX}.
-Tale combinazione, ha infatti introdotto un nuovo paradigma di sviluppo, in cui l'intera appplicazione viene caricata una sola volta e le successive interazioni con l'utente avvengono grazie al caricamento dinamico di contenuti e dati provenienti da un web server, eliminando così l'attesa nel caricamento di una nuova pagina e favorendo l'esperienza d'uso.
+Tale combinazione, ha infatti introdotto un nuovo paradigma di sviluppo, in cui l'intera applicazione viene caricata una sola volta e le successive interazioni con l'utente avvengono grazie al caricamento dinamico di contenuti e dati provenienti da un web server, eliminando così l'attesa nel caricamento di una nuova pagina e favorendo l'esperienza d'uso.
 \\Parallelamente, la complessità delle funzionalità offerte è cresciuta in modo esponenziale, spaziando da applicazioni di grafica 3D, a simulatori, ad applicazioni di modifica di documenti, immagini e video.
 Oggi, è sempre più comune incontrare siti web in grado di gestire complesse operazioni in tempi rapidi, assicurando così quell'interattività alla quale ormai siamo abituati. 
 Tuttavia questo progresso è stato accompagnato da un aumento del numero di richieste effettuate in rete e dall'utilizzo intensivo di risorse computazionali, sia lato cliente, che lato servitore.
@@ -83,23 +83,24 @@ Consentendo l'esecuzione di codice a basso livello con prestazioni paragonabili 
 
 \subsection{Obiettivi}
 Si intende esplorare le opportunità offerte dalle tecnologie enunciate sopra, nell'ottica di un'ottimizzazione delle prestazioni.
-In questo contesto l'obiettivo sarà quello di comprendere i benefici specifici di ciascun approccio, individuando le circostanze in cui uno dei due possa risultare vantaggioso in termini di efficienza computazionale e reattività. Inoltre si vorrà sottolineare l'importanza, sin dalla fase di progettazione, di un'attenta analisi per determinare se un'applicazione sia maggiormente orientata al calcolo intensivo o all'uso massiccio del File System. 
-Per raggiungere in maniera efficace e misurabile gli obiettivi, verrà fatta un'analisi approfondita delle performance e delle prestazioni delle due applicazioni sviluppate.
-
+In questo contesto l'obiettivo centrale è quello di comprendere i benefici specifici di ciascun approccio, individuando le circostanze in cui uno dei due possa risultare vantaggioso in termini di efficienza computazionale e reattività. 
+Inoltre si intende sottolineare il fatto che le decisioni intraprese sin dalla fase di progettazione, possono avere un impatto significativo sulle prestazioni e sull'esperienza utente di un'applicazione.
+Si vuole mettere in evidenza l'importanza di una valutazione attenta e accurata dell'architettura e delle esigenze dell'applicazione stessa.
+Aspetto che dovrà essere affrontato attraverso un'analisi dettagliata che considera le funzionalità dell'applicazione e valuta se essa sia orientata al calcolo intensivo o ad un'ampia manipolazione del File System.
+\\Per raggiungere in maniera efficace e quantificabile gli obiettivi, verrà fatta un'analisi approfondita delle performance e delle prestazioni delle due applicazioni sviluppate.
+Questo ci consentirà di valutare in modo empirico e misurabile l'impatto di ciascuna tecnologia nel contesto di applicazioni CPU-Intensive.
 \newpage
-\section{Trend di evoluzione del web}
-\label{sec:Trend}
-\subsection{Paradigmi di Sviluppo Moderni}
-
-\subsection{Esperienze Utente Migliorate ?}
-
-
 
 \section{Struttura della tesi}
 \label{sec:struttura}
+La tesi seguirà una struttura articolata in modo da affrontare in maniera approfondita gli aspetti chiave delle tecnologie e delle analisi proposte.
+\\Nel Capitolo 2, sarà presentata una panoramica esaustiva delle tecnologie coinvolte in questa ricerca. Questo capitolo fornirà un'analisi dettagliata di WebAssembly/WASI in combinazione con Rust e di Node.js, esaminandone le caratteristiche, i vantaggi e le API utili allo sviluppo dell'applicazione.
+Verranno esplorati i contesti in cui ciascuna tecnologia si dimostra più adeguata, fornendo le basi per una comprensione approfondita delle successive misurazioni e valutazioni.
+\\Nel Capitolo 3, il focus sarà sul prototipo dell'applicazione sviluppata. Saranno illustrate le scelte progettuali, l'architettura complessiva e le funzionalità implementate.
+Successivamente, verranno presentati i dettagli delle misurazioni condotte, insieme ai criteri di valutazione delle prestazioni delle tecnologie in esame. 
+Saranno discussi i risultati ottenuti e i confronti tra le diverse implementazioni, evidenziando gli aspetti in cui Rust+Wasm e Node.js si distinguono in termini di ottimizzazione delle prestazioni.
 
-This is a reference to a chapter \ref{chap:1}. This is a reference to a figure \ref{fig:doge}. This is a reference to some code \ref{lst:hello}. This is a citation \cite{famous:paper}.
-
+\newpage
 \lstinputlisting[label=lst:hello, firstline=2, lastline=4, caption={I directly included a portion of a file}]{code/hello.py}
 
 \begin{lstlisting}[language=Java, label=lst:java, caption={Some code in another language than the default one}]
