@@ -1,9 +1,52 @@
-\chapter{Capitolo 2}
+\chapter{Tecnologie utilizzate}
 \label{chap:2}
 
-\section{Tecnologie}
-\label{sec:Tecnologie}
+\section{Introduzione alle tecnologie}
+\label{sec:IntroduzioneTecnologie}
+Come già introdotto brevemente nel capitolo \ref{chap:1}, per lo scopo di questa tesi si è scelto di confrontare due approcci differenti, ma sempre più utilizzati nelle applicazioni web moderne.
+In particolare si partirà da WebAssembly e dall'interfaccia di sistema WASI, per finire con un'introduzione anche su Node.js.
 
+\section{WebAssembly}
+\label{sec:Wasm}
+WebAssembly (Wasm) è uno standard che definisce un formato binario (.wasm) e un relativo formato testuale (.wat) per la scrittura di codice eseguibile nelle pagine web. 
+\\Esso è nato come integrazione a javascript, per consentire l'esecuzione di codice ad una velocità paragonabile a quella del codice nativo.
+\textbf{Il codice WebAssembly è eseguito all'interno di una sandbox garantendo così sicurezza.
+I programmi possono essere compilati da svariati linguaggi di alto livello in moduli Wasm. rendendo possibile l'esecuzione di applicazioni lato client in maniera che prima era impensabile.} MODIFICARE!!!
+Al giorno d'oggi praticamente ogni browser supporta WebAssembly e il suo sviluppo è portato avanti dal \emph{W3C WebAssembly Working Group}
+
+\subsection{Storia e Origini di WebAssembly}
+\subsubsection{I predecessori}
+NaCl e asm.js
+\subsection{Architettura di WebAssembly}
+\subsection{Vantaggi di WebAssembly}
+
+\newpage
+\section{WebAssembly System Interface}
+\label{sec:WASI}
+\subsection{Ruolo di WebAssembly System Interface}
+\subsection{Rust e WASI}
+\subsection{Struttura di WASI}
+\subsection{Wasmtime}
+\subsection{Applicazioni e Casistiche d'Uso di WASI}
+
+\newpage
+\section{Node.js}
+\label{sec:Node}
+\subsection{Panoramica di Node.js}
+\subsection{Vantaggi di Node.js}
+\subsection{Ecosistema di Node.js}
+
+\newpage
+\section{Confronto tra tecnologie}
+\label{sec:Confronto}
+\subsection{Prestazioni}
+\subsection{Sicurezza}
+\subsection{Facilità di Sviluppo}
+\subsection{Scalabilità ed Espandibilità}
+
+\newpage
+\section{Conclusioni preliminari}
+\label{sec:ConclusioniTecnologie}
 
 \newpage
 \lstinputlisting[label=lst:hello, firstline=2, lastline=4, caption={I directly included a portion of a file}]{code/hello.py}
