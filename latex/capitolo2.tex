@@ -9,14 +9,29 @@ In particolare si partirà da WebAssembly e dall'interfaccia di sistema WASI, pe
 \section{WebAssembly}
 \label{sec:Wasm}
 WebAssembly (Wasm) è uno standard che definisce un formato binario (.wasm) e un relativo formato testuale (.wat) per la scrittura di codice eseguibile nelle pagine web. 
-\\Esso è nato come integrazione a javascript, per consentire l'esecuzione di codice ad una velocità paragonabile a quella del codice nativo.
+\\Esso è nato come integrazione a JavaScript, per consentire l'esecuzione di codice ad una velocità paragonabile a quella del codice nativo.
 \textbf{Il codice WebAssembly è eseguito all'interno di una sandbox garantendo così sicurezza.
 I programmi possono essere compilati da svariati linguaggi di alto livello in moduli Wasm. rendendo possibile l'esecuzione di applicazioni lato client in maniera che prima era impensabile.} MODIFICARE!!!
 Al giorno d'oggi praticamente ogni browser supporta WebAssembly e il suo sviluppo è portato avanti dal \emph{W3C WebAssembly Working Group}
 
 \subsection{Storia e Origini di WebAssembly}
 \subsubsection{I predecessori}
-NaCl e asm.js
+Nel 2011 Google rilasciò un progetto open source chiamato \textbf{Native Client (NaCl)}.
+L'obiettivo era quello di consentire l'esecuzione di codice nativo nel browser all'interno di una sandbox con privilegi limitati.
+In particolare si stava cercando di supportare software che richiedevano grande sforzo computazionale (simulazioni, elaborazioni di audio e video e giochi).
+\\Il progetto si rivelò un successo sotto il punto di vista prestazionale. Vennero infatti rilasciati diversi software e giochi che presentavano prestazioni simili alla rispettiva versione Desktop.
+Non mancavano però diversi problemi. Il codice ottenuto era eseguibile solo nel browser Chrome, era impossibile l'interazione con JavaScript o con altre API sul web.
+\\Un tentativo di evoluzione fu presentato nel 2013 dal team di Mozilla. Si trattava di \textbf{asm.js}, un sottoinsieme di JavaScript che consentiva l'invocazione di funzioni scritte in linguaggi come C, C++ o Rust, in diversi browser e direttamente da JavaScript.
+A discapito di una maggior portabilità ci fu una significativa diminuizione delle prestazioni, dovuta alla lentezza dell'interprete JavaScript.
+Queste due soluzioni dimostrarono la possbilità di eseguire codice in una sandbox, o con ottime prestazioni, ma solo all'interno di Chrome (NaCl), oppure in diversi browser ma con prestazioni decisamente inferiori.
+Si voleva quindi trovare un modo per unificare gli enormi vantaggi dei due approcci.
+\subsubsection{L'annuncio}
+Fu nel Giugno 2015 che Brendan Eich (creatore di JavaScript), insieme ad altri sviluppatori di Mozilla, annunciarono che lo sviluppo di WebAssembly era cominciato.
+Wasm venne presentato come "un nuovo standard open source che definiva un formato e un modello di esecuzione portabile ed efficiente in termini di dimensioni e tempo di caricamento, specificamente progettato per avere come \emph{compilation target} il web".
+Capendo le potenzialità di ciò che stava venendo sviluppato avevano dato il loro contributo aziende del calibro di Google, Microsoft, Apple, Unity.
+Nel 2017 venne lanciato il prodotto minimo funzionante (MVP), che conteneva pressochè le stesse funzionalità presenti in asm.js e venne dichiarata conclusa la fase di preview.
+
+\newpage
 \subsection{Architettura di WebAssembly}
 \subsection{Vantaggi di WebAssembly}
 
