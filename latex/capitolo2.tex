@@ -53,7 +53,7 @@ La memoria lineare è un  array continuo di byte. Ha una dimensione iniziale che
 \subsubsection{Moduli}
 Un modulo è l'unità di deployment per un programma WebAssembly. Esso conterrà le definizioni di funzioni, tabelle, memoria etc. In un modulo è anche possibile esportare o importare definizioni, inizializzare tabelle o memoria lineare e anche definire una funzione \emph{start} che verrà eseguita automaticamente. 
 \subsubsection{Embedder}
-Solitamente un modulo WebAssembly sarà integrato in un host che ne definirà l'inizializzazione, la risoluzione delle funzioni importate  e le modalità di accesso di quelle esportate. L'Embedder è l'entità che implementa la connessione tra l'ambiente host e il modulo Wasm. 
+Solitamente un modulo WebAssembly sarà integrato in un host che ne definirà l'inizializzazione, la risoluzione delle funzioni importate  e le modalità di accesso di quelle esportate. L'Embedder è l'entità che implementa la connessione tra l'ambiente host e il modulo Wasm. Ci si aspetta che l'embedder interagisca con la semantica di WebAssembly in un modo ben definito.
 \begin{figure}
         \begin{center}
                 \includegraphics[width=0.9\columnwidth]{images/wasmArchitecture.png}
@@ -70,7 +70,7 @@ I moduli WebAssembly sono distribuiti in formato binario (.wasm) e per questo è
 \subsubsection{Validazione}
 Dopo aver decodificato i moduli binari, per poterli istanziare, è necessario verificare che questi siano validi.
 La validità è appurata grazie ad un sistema di tipi basato sulla sintassi astratta di un modulo e sul suo contenuto. In particolare per ogni componente della sintassi è presente una regola che specifica le condizioni da rispettare perchè il modulo risulti valido.
-Ad esempio viene controllato l'ordine delle istruzioni nel corpo di una funzione assicurandosi che lo stack sia utilizzato nel modo corretto.
+!!!!Ad esempio viene controllato l'ordine delle istruzioni nel corpo di una funzione assicurandosi che lo stack sia utilizzato nel modo corretto.
 Per esempio, dato un contesto \(C\) e un'istruzione del tipo \emph{t.binop} (che rappresenta un'operazione binaria tra tipi numerici, come ad esempio i32.add, f64.xor etc.) è valida con tipo \([t~t]{\rightarrow} [t]\), in notazione formale: 
 \begin{equation*}
 \frac{
@@ -92,12 +92,33 @@ Oppure con un'istruzione più complicata per l'aumento di memoria lineare \emph{
 \end{equation*}
 \subsubsection{Esecuzione}
 Terminata la validazione di ogni istruzione il modulo può finalmente essere istanziato.
-L'istanza di un modulo ne è la rappresentazione dinamica, comprendente anche stack di esecuzione e stato. 
-Ora è finalmente possibile l'esecuzione di istruzioni WebAssembly e in particolare:
+L'istanza di un modulo ne è la rappresentazione dinamica. Esso comprende lo stack, sul quale operano le istruzioni WebAssembly e uno \emph{store} astratto, contenente lo stato globale (è la rappresentazione a runtime di tutte le istanze di funzioni, tabelle, memorie etc. che sono state allocate dall'istanziazione).
+Terminata l'istanziazione, diventa effettivamente possibile l'esecuzione di istruzioni WebAssembly.
+\\In particolare se nel modulo era stata definita una funzione \emph{\_start}, essa sarà eseguita subito dopo la creazione dell'istanza. D'ora in avanti diventerà anche possibile invocare funzioni esportate, chiamandole direttamente dall'istanza.
+Per ogni istruzione , è presente una regola che specifica l'effetto della sua esecuzione sullo stato del programma. Rimanendo coerenti con gli esempi sulla validazione, segue il comportamento dell'istruzione \({\mathsf{t.binop}}\):
 \begin{itemize}
-        \item Se era stata definita nel modulo una funzione \emph{\_start}, essa verrà eseguita durante l'istanziazione
-        \item Se 
+        \item Grazie alla validazione assumiamo che due valori di tipo \(t\) siano in cima allo stack.
+        \item Viene eseguita l'operazione di \textbf{pop} del valore \(t.const~c_1\) dallo stack
+        \item Viene eseguita l'operazione di \textbf{pop} del valore \(t.const~c_2\) dallo stack
+        \item Se \({\mathit{binop}}_t(c_1, c_2)\) è definita allora:
+        \begin{itemize}
+                \item Sia \(c\) il possibile risultato di \({\mathit{binop}}_t(c_1, c_2)\)
+                \item Viene eseguita l'operazione di \textbf{push} del valore \(t.const~c\) nello stack
+        \end{itemize}
+        \item Altrimenti:
+        \begin{itemize}
+                \item Trap
+        \end{itemize}
 \end{itemize}
+\begin{equation*}
+        \begin{split}\begin{array}{lcl@{\qquad}l}
+                (t\mathsf{.}{\mathsf{const}}~c_1)~(t\mathsf{.}{\mathsf{const}}~c_2)~t\mathsf{.}{\mathit{binop}} &{\hookrightarrow}& (t\mathsf{.}{\mathsf{const}}~c)
+                  & (\mathrel{\mbox{if}} c \in {\mathit{binop}}_t(c_1,c_2)) \\
+                (t\mathsf{.}{\mathsf{const}}~c_1)~(t\mathsf{.}{\mathsf{const}}~c_2)~t\mathsf{.}{\mathit{binop}} &{\hookrightarrow}& {\mathsf{trap}}
+                  & (\mathrel{\mbox{if}} {\mathit{binop}}_{t}(c_1,c_2) = \{\})
+                \end{array}\end{split}
+\end{equation*}
+Si noti che sia l'istanziazione, che l'invocazione di funzioni, sono operazioni che avvengono all'interno dell'ambiente di esecuzione dell'host.
 \begin{figure}
         \begin{center}
                 \includegraphics[width=0.97\columnwidth]{images/wasmSemanticPhases.png}
