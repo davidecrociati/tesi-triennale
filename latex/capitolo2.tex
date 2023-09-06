@@ -24,16 +24,16 @@ Non mancavano però diversi problemi. Il codice ottenuto era eseguibile solo nel
 \\Un tentativo di evoluzione fu presentato nel 2013 dal team di Mozilla. Si trattava di \textbf{asm.js}, un sottoinsieme di JavaScript che consentiva l'invocazione di funzioni scritte in linguaggi come C, C++ o Rust, in diversi browser e direttamente da JavaScript.
 A discapito di una maggior portabilità ci fu una significativa diminuizione delle prestazioni, dovuta alla lentezza dell'interprete JavaScript.
 Queste due soluzioni dimostrarono la possbilità di eseguire codice in una sandbox, o con ottime prestazioni, ma solo all'interno di Chrome (NaCl), oppure in diversi browser ma con prestazioni decisamente inferiori.
-Si voleva quindi trovare un modo per unificare gli enormi vantaggi dei due approcci.
+Si voleva quindi trovare un modo per unificare gli enormi vantaggi dei due approcci.\cite*{wasmBook}
 \subsubsection{L'annuncio}
-Fu nel Giugno 2015 che Brendan Eich (creatore di JavaScript), insieme ad altri sviluppatori di Mozilla, annunciarono che lo sviluppo di WebAssembly era cominciato.
+Fu nel Giugno 2015 che Brendan Eich (creatore di JavaScript), insieme ad altri sviluppatori di Mozilla, annunciarono che lo sviluppo di WebAssembly era cominciato.\cite*{asmjsToWasm}
 Wasm venne presentato come "un nuovo standard open source che definiva un formato e un modello di esecuzione portabile, efficiente in termini di dimensioni e tempo di caricamento, specificamente progettato per essere un target di compilazione per il web".
 Capendo le potenzialità di ciò che stava venendo sviluppato hanno dato il loro contributo al progetto, aziende del calibro di Google, Microsoft, Apple e Unity.
 Nel 2017 venne lanciato il prodotto minimo funzionante (MVP), che conteneva pressochè le stesse funzionalità presenti in asm.js e venne dichiarata conclusa la fase di preview.
 
 \newpage
 \subsection{I concetti chiave di WebAssembly}
-WebAssembly codifica un linguaggio di programmazione di basso livello, simile ad Assembly. Il linguaggio è strutturato attorno ai seguenti concetti:
+WebAssembly codifica un linguaggio di programmazione di basso livello, simile ad Assembly. Il linguaggio è strutturato attorno ai seguenti concetti:\cite*{wasmSpec}
 
 \subsubsection{Valori}
 In WebAssembly sono presenti 4 tipi di valori numerici. Interi e numeri a virgola mobile, ognuno da 32 o 64 bit (i32, i64, f32, f64), un tipo vector a 128 bit(i128) contenente anch'esso valori numerici (ad esempio da 2 f64, oppure da 4 i32 etc.) ed inoltre è presente un tipo riferimento per puntatori a differenti entità. 
@@ -53,7 +53,7 @@ La memoria lineare è un  array continuo di byte. Ha una dimensione iniziale che
 \subsubsection{Moduli}
 Un modulo è l'unità di deployment per un programma WebAssembly. Esso conterrà le definizioni di funzioni, tabelle, memoria etc. In un modulo è anche possibile esportare o importare definizioni, inizializzare tabelle o memoria lineare e anche definire una funzione \emph{start} che verrà eseguita automaticamente. 
 \subsubsection{Embedder}
-Solitamente un modulo WebAssembly sarà integrato in un host che ne definirà l'inizializzazione, la risoluzione delle funzioni importate  e le modalità di accesso di quelle esportate. L'Embedder è l'entità che implementa la connessione tra l'ambiente host e il modulo Wasm. Ci si aspetta che l'embedder interagisca con la semantica di WebAssembly in un modo ben definito.
+Solitamente un modulo WebAssembly sarà integrato in un host che ne definirà l'inizializzazione, la risoluzione delle funzioni importate  e le modalità di accesso di quelle esportate. L'Embedder è l'entità che implementa la connessione tra l'ambiente host e il modulo Wasm. Ci si aspetta che l'embedder interagisca con la semantica di WebAssembly in un modo ben definito nelle specifiche del formato Wasm.
 \begin{figure}
         \begin{center}
                 \includegraphics[width=0.9\columnwidth]{images/wasmArchitecture.png}
@@ -64,12 +64,12 @@ Solitamente un modulo WebAssembly sarà integrato in un host che ne definirà l'
 
 \newpage
 \subsection{Le fasi semantiche}
-Nella semantica di WebAssembly è possibile individuare tre fasi: decodifica, validazione ed esecuzione.
+Nella semantica di WebAssembly è possibile individuare tre fasi principali: decodifica, validazione ed esecuzione.\cite*{wasmSpec}
 \subsubsection{Decodifica}
 I moduli WebAssembly sono distribuiti in formato binario (.wasm) e per questo è necessario decodificarli in modo da ottenere una rappresentazione interna del modulo, con cui il web browser o il runtime environment potrà lavorare.
 \subsubsection{Validazione}
-Dopo aver decodificato i moduli binari, per poterli istanziare, è necessario verificare che questi siano validi.
-La validità è appurata grazie ad un sistema di tipi basato sulla sintassi astratta di un modulo e sul suo contenuto. In particolare per ogni componente della sintassi è presente una regola che specifica le condizioni da rispettare perchè il modulo risulti valido.
+Dopo aver decodificato i moduli binari, per poterli istanziare, è necessario controllare che questi siano validi.
+La validità è verificata grazie ad un sistema di tipi basato sulla sintassi astratta di un modulo e sul suo contenuto. In particolare per ogni componente della sintassi è presente una regola che specifica le condizioni da rispettare perchè il modulo risulti valido.
 !!!!Ad esempio viene controllato l'ordine delle istruzioni nel corpo di una funzione assicurandosi che lo stack sia utilizzato nel modo corretto.
 Per esempio, dato un contesto \(C\) e un'istruzione del tipo \emph{t.binop} (che rappresenta un'operazione binaria tra tipi numerici, come ad esempio i32.add, f64.xor etc.) è valida con tipo \([t~t]{\rightarrow} [t]\), in notazione formale: 
 \begin{equation*}
@@ -95,9 +95,10 @@ Terminata la validazione di ogni istruzione il modulo può finalmente essere ist
 L'istanza di un modulo ne è la rappresentazione dinamica. Esso comprende lo stack, sul quale operano le istruzioni WebAssembly e uno \emph{store} astratto, contenente lo stato globale (è la rappresentazione a runtime di tutte le istanze di funzioni, tabelle, memorie etc. che sono state allocate dall'istanziazione).
 Terminata l'istanziazione, diventa effettivamente possibile l'esecuzione di istruzioni WebAssembly.
 \\In particolare se nel modulo era stata definita una funzione \emph{\_start}, essa sarà eseguita subito dopo la creazione dell'istanza. D'ora in avanti diventerà anche possibile invocare funzioni esportate, chiamandole direttamente dall'istanza.
-Per ogni istruzione , è presente una regola che specifica l'effetto della sua esecuzione sullo stato del programma. Rimanendo coerenti con gli esempi sulla validazione, segue il comportamento dell'istruzione \({\mathsf{t.binop}}\):
+Per ogni istruzione , è presente una regola che specifica l'effetto della sua esecuzione sullo stato del programma. Rimanendo coerenti con gli esempi sulla validazione, segue il comportamento dell'istruzione \emph{t.binop}:
+
 \begin{itemize}
-        \item Grazie alla validazione assumiamo che due valori di tipo \(t\) siano in cima allo stack.
+        \item In seguito alla validazione, possiamo assumere che due valori di tipo \(t\) si trovino in cima allo stack.
         \item Viene eseguita l'operazione di \textbf{pop} del valore \(t.const~c_1\) dallo stack
         \item Viene eseguita l'operazione di \textbf{pop} del valore \(t.const~c_2\) dallo stack
         \item Se \({\mathit{binop}}_t(c_1, c_2)\) è definita allora:
@@ -110,6 +111,7 @@ Per ogni istruzione , è presente una regola che specifica l'effetto della sua e
                 \item Trap
         \end{itemize}
 \end{itemize}
+In notazione formale:
 \begin{equation*}
         \begin{split}\begin{array}{lcl@{\qquad}l}
                 (t\mathsf{.}{\mathsf{const}}~c_1)~(t\mathsf{.}{\mathsf{const}}~c_2)~t\mathsf{.}{\mathit{binop}} &{\hookrightarrow}& (t\mathsf{.}{\mathsf{const}}~c)
@@ -118,6 +120,7 @@ Per ogni istruzione , è presente una regola che specifica l'effetto della sua e
                   & (\mathrel{\mbox{if}} {\mathit{binop}}_{t}(c_1,c_2) = \{\})
                 \end{array}\end{split}
 \end{equation*}
+\break
 Si noti che sia l'istanziazione, che l'invocazione di funzioni, sono operazioni che avvengono all'interno dell'ambiente di esecuzione dell'host.
 \begin{figure}
         \begin{center}

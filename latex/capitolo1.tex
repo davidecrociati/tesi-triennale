@@ -32,8 +32,8 @@ Tutto ciò non riguarda solo il lato client, ma coinvolge anche il lato server.
 Un carico eccessivo sui server può influire negativamente sulla scalabilità, causando ritardi nelle risposte e possibili interruzioni del servizio.
 L'ottimizzazione deve quindi coinvolgere tutti gli aspetti dell'architettura delle applicazioni web.
 \\Nell'implementare ottimizzazioni, sono nati varie soluzioni interessanti. 
-Ad esempio, per gestire task che svolgono molte operazioni di Input/Output si è distinto il runtime environment \textbf{Node.js}, mentre per quanto riguardo l'esecuzione di attività che sfruttano molto la CPU è emerso \textbf{WebAssembly(Wasm)}.
-Quest'ultimo, nato inizialmente per consentire l'esecuzione di codice ad alta efficienza all'interno del browser, è diventato portabile anche su piattaforme server side grazie allo sviluppo dell'interfaccia di sistema \textbf{WebAssembly System Interface (WASI)}.
+Ad esempio, per gestire task che svolgono molte operazioni di Input/Output si è distinto il runtime environment \textbf{Node.js}\cite*{nodeHome}, mentre per quanto riguardo l'esecuzione di attività che sfruttano molto la CPU è emerso \textbf{WebAssembly(Wasm)}\cite*{wasmHome}.
+Quest'ultimo, nato inizialmente per consentire l'esecuzione di codice ad alta efficienza all'interno del browser, è diventato portabile anche su piattaforme server side grazie allo sviluppo dell'interfaccia di sistema \textbf{WebAssembly System Interface (WASI)}\cite*{wasiHome}.
 
 
 \section{Motivazioni e Obiettivi}
@@ -55,7 +55,7 @@ In particolare, l'utente avrà la possibilità di eseguire l'upload di immagini 
         \label{fig:imageProc}
 \end{figure} 
 \subsection{Metodologie confrontate}
-Le due modalità di sviluppo in esame riguarderanno l'utilizzo delle tecnologie JavaScript e WebAssembly lato server e quindi rispettivamente del runtime environment Node.js e del linguaggio di programmazione \textbf{Rust} in combinazione con WebAssembly System Interface. 
+Le due modalità di sviluppo in esame riguarderanno l'utilizzo delle tecnologie JavaScript e WebAssembly lato server e quindi rispettivamente del runtime environment Node.js e del linguaggio di programmazione \textbf{Rust} in combinazione con WebAssembly System Interface\cite*{rust:wasm}. 
 \\La scelta di Node.js deriva dal suo utilizzo sempre maggiore grazie all'utilizzo del linguaggio JavaScript, dall'approccio asincrono nella gestione delle richieste e dalla sua ottima scalabilità per applicazioni fortemente File-System-Intensive.
 Per quanto riguarda la seconda tecnologia si è invece optato per Rust, in quanto consente sia la scrittura di \textbf{moduli} che succesivamente \textbf{compilabili in WebAssembly}, sia il loro utilizzo efficiente all'interno del codice, mantenendo in questo modo un'ottima coerenza e risultando, teoricamente, una buona scelta per lo sviluppo di applicazioni computazionalmente complesse. 
 
@@ -105,8 +105,8 @@ Questi temi avanzano spesso di pari passo ed è importante, in un ambiente web i
 \section{Struttura della tesi}
 \label{sec:struttura}
 La tesi seguirà una struttura articolata in modo da affrontare in maniera approfondita gli aspetti chiave delle tecnologie e delle analisi proposte.
-\\Nel Capitolo 2, sarà presentata una panoramica esaustiva delle tecnologie coinvolte in questa ricerca. Questo capitolo fornirà un'analisi dettagliata di WebAssembly/WASI in combinazione con Rust e di Node.js, esaminandone le caratteristiche, i vantaggi e le \textbf{API} utili allo sviluppo dell'applicazione.
+\\Nel Capitolo \ref{chap:2}, sarà presentata una panoramica esaustiva delle tecnologie coinvolte in questa ricerca. Questo capitolo fornirà un'analisi dettagliata di WebAssembly/WASI in combinazione con Rust e di Node.js, esaminandone le caratteristiche, i vantaggi e le \textbf{API} utili allo sviluppo dell'applicazione.
 Verranno esplorati i contesti in cui ciascuna tecnologia si dimostra più adeguata, fornendo le basi per una comprensione approfondita delle successive misurazioni e valutazioni.
-\\Nel Capitolo 3, il focus sarà sul prototipo dell'applicazione sviluppata. Saranno illustrate le scelte progettuali, l'architettura complessiva e le funzionalità implementate.
+\\Nel Capitolo \ref{chap:3}, il focus sarà sul prototipo dell'applicazione sviluppata. Saranno illustrate le scelte progettuali, l'architettura complessiva e le funzionalità implementate.
 Successivamente, verranno presentati i dettagli delle misurazioni condotte, insieme ai criteri di valutazione delle prestazioni delle tecnologie in esame. 
 Saranno discussi i risultati ottenuti e i confronti tra le diverse implementazioni, evidenziando gli aspetti in cui ognuno degli approcci studiati, si distingue in termini di ottimizzazione delle prestazioni.
