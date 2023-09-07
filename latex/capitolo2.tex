@@ -16,7 +16,7 @@ Wasm è attualmente sviluppato in maniera open-source, da un \emph{Community Gro
 \cite*{wasmDesign}
 \\Al giorno d'oggi è in costante crescita, sia il numero di linguaggi che possono avere come \emph{compilation target} WebAssembly (Rust, C, Go, Kotiln, etc), sia il numero di siti che sfruttano tale tecnologia, grazie anche al fatto che praticamente ogni browser attualmente utilizzato, supporta Wasm. 
 
-\subsection{Storia e Origini di WebAssembly}
+\subsection{Storia e Origini}
 \subsubsection{I predecessori}
 Nel 2011 Google rilasciò un progetto open source chiamato \textbf{Native Client (NaCl)}.
 L'obiettivo era quello di consentire l'esecuzione di codice nativo nel browser all'interno di una sandbox con privilegi limitati.
@@ -34,7 +34,7 @@ WebAssembly prometteva prestazioni fino a 20 volte superiori rispetto ad asm.js,
 Nel 2017 venne lanciato il \emph{minimum viable product} (MVP), che conteneva pressochè le stesse funzionalità presenti in asm.js e venne dichiarata conclusa la fase di preview.
 Capendo le potenzialità di ciò che stava venendo sviluppato hanno dato il loro contributo al progetto, aziende del calibro di Google, Microsoft, Apple, Unity.
 
-\subsection{I concetti chiave di WebAssembly}
+\subsection{Concetti chiave}
 WebAssembly codifica un linguaggio di programmazione di basso livello, simile ad Assembly. Tale linguaggio è strutturato attorno ai seguenti concetti:\cite*{wasmSpec}
 
 \subsubsection{Valori}
@@ -69,27 +69,36 @@ Solitamente un modulo WebAssembly sarà integrato in un host che ne definirà l'
         \caption{Architettura di WebAssembly}
         \label{fig:wasmArch}
 \end{figure}
-
-\subsection{Le fasi semantiche}
+\newpage
+\subsection{Fasi semantiche}
 Nella semantica di WebAssembly è possibile individuare tre fasi principali: decodifica, validazione ed esecuzione.\cite*{wasmSpec}
 \subsubsection{Decodifica}
 I moduli WebAssembly sono distribuiti in formato binario (.wasm) e per questo è necessario decodificarli in modo da ottenere una rappresentazione interna del modulo, con cui il web browser o il runtime environment potrà lavorare.
 \subsubsection{Validazione}
 Dopo aver decodificato i moduli binari, per poterli istanziare, è necessario controllare che questi siano validi.
 La validità è verificata grazie ad un sistema di tipi basato sulla sintassi astratta di un modulo e sul suo contenuto. In particolare per ogni componente della sintassi è presente una regola che specifica le condizioni da rispettare perchè il modulo risulti valido.
-!!!!Ad esempio viene controllato l'ordine delle istruzioni nel corpo di una funzione assicurandosi che lo stack sia utilizzato nel modo corretto.
-Per esempio, dato un contesto \(C\) e un'istruzione del tipo \emph{t.binop} (che rappresenta un'operazione binaria tra tipi numerici, come ad esempio i32.add, f64.xor etc.) è valida con tipo \([t~t]{\rightarrow} [t]\), in notazione formale: 
+\begin{figure}
+        \begin{center}
+                \includegraphics[width=1\columnwidth]{images/wasmSyntax.png}
+        \end{center}
+        \caption{La sintassi astratta di WebAssembly}
+        \label{fig:wasmSyntax}
+\end{figure}
+\\Ad esempio viene controllato l'ordine delle istruzioni nel corpo di una funzione assicurandosi che lo stack sia utilizzato nel modo corretto.
+Oppure se nelle specifiche esaminiamo un'operazione binaria tra tipi numerici (i32.add, f64.xor etc.), notiamo che essa è del tipo \emph{t.binop} e dato un contesto \(C\) essa è valida solamente con tipo \([t~t]{\rightarrow} [t]\).
+\\Tale regola si può anche rappresentare con la seguente notazione formale:
 \begin{equation*}
 \frac{
 }{
         C {\vdash} t\mathsf{.}{\mathit{binop}} : [t~t] {\rightarrow} [t]
 }
 \end{equation*}
-Oppure con un'istruzione più complicata per l'aumento di memoria lineare \emph{memory.grow}:
+Esaminando invece le regole di validazione di un'istruzione per l'aumento di memoria lineare \emph{memory.grow} (tale istruzione si aspetta l'offset che indica di quanto la memoria è da espandere e ritorna la dimensione della memoria precedente all'espansione) notiamo che:
 \begin{itemize}
         \item La memoria \(C.{\mathit{mems}}[0]\) deve essere definita nel contesto.
         \item Allora l'istruzione risulta valida con tipo \([{\mathit{i32}}] {\rightarrow} [{\mathit{i32}}]\)
 \end{itemize}
+In notazione formale:
 \begin{equation*}
         \frac{
         C.{\mathit{mems}}[0] = {\mathit{memtype}}
@@ -99,10 +108,10 @@ Oppure con un'istruzione più complicata per l'aumento di memoria lineare \emph{
 \end{equation*}
 \subsubsection{Esecuzione}
 Terminata la validazione di ogni istruzione il modulo può finalmente essere istanziato.
-L'istanza di un modulo ne è la rappresentazione dinamica. Esso comprende lo stack, sul quale operano le istruzioni WebAssembly e uno \emph{store} astratto, contenente lo stato globale (è la rappresentazione a runtime di tutte le istanze di funzioni, tabelle, memorie etc. che sono state allocate dall'istanziazione).
+L'istanza di un modulo ne è la rappresentazione dinamica. Esso comprende lo stack, sul quale operano le istruzioni WebAssembly e uno \emph{\textbf{store}} astratto, contenente lo stato globale (è la rappresentazione a runtime di tutte le istanze di funzioni, tabelle, memorie etc. che sono state allocate dall'istanziazione).
 Terminata l'istanziazione, diventa effettivamente possibile l'esecuzione di istruzioni WebAssembly.
-\\In particolare se nel modulo era stata definita una funzione \emph{\_start}, essa sarà eseguita subito dopo la creazione dell'istanza. D'ora in avanti diventerà anche possibile invocare funzioni esportate, chiamandole direttamente dall'istanza.
-Per ogni istruzione , è presente una regola che specifica l'effetto della sua esecuzione sullo stato del programma. Rimanendo coerenti con gli esempi sulla validazione, segue il comportamento dell'istruzione \emph{t.binop}:
+\\In particolare, se nel modulo era stata definita una funzione \emph{\_start}, essa sarà eseguita subito dopo la creazione dell'istanza, altrimenti sarà possibile invocare funzioni esportate, chiamandole direttamente dall'istanza stessa.
+\\Per ogni istruzione, è presente una regola che specifica l'effetto della sua esecuzione sullo stato del programma. Rimanendo coerenti con gli esempi sulla validazione, segue il comportamento dell'istruzione \emph{t.binop}:
 
 \begin{itemize}
         \item In seguito alla validazione, possiamo assumere che due valori di tipo \(t\) si trovino in cima allo stack.
@@ -127,6 +136,7 @@ In notazione formale:
                   & (\mathrel{\mbox{if}} {\mathit{binop}}_{t}(c_1,c_2) = \{\})
                 \end{array}\end{split}
 \end{equation*}
+Non viene riportato l'esempio anche sull'istruzione \emph{memory.grow} essendo una funzionalità decisamente più complessa (11 diversi passaggi, con svariati sottocasi) che comporterebbe obbligatoriamente, l'introduzione di ulteriori dettagli che esulano dallo scopo di questa tesi.
 \break
 Si noti che sia l'istanziazione, che l'invocazione di funzioni, sono operazioni che avvengono all'interno dell'ambiente di esecuzione dell'host.
 \begin{figure}
@@ -138,13 +148,23 @@ Si noti che sia l'istanziazione, che l'invocazione di funzioni, sono operazioni 
 \end{figure}
 
 \newpage
-\subsection{Vantaggi di WebAssembly}
-WebAssembly is being created as an open standard inside the W3C WebAssembly Community Group with the following goals:
-Be fast, efficient, and portable — WebAssembly code can be executed at near-native speed across different platforms by taking advantage of common hardware capabilities.
-Be readable and debuggable — WebAssembly is a low-level assembly language, but it does have a human-readable text format (the specification for which is still being finalized) that allows code to be written, viewed, and debugged by hand.
-Keep secure — WebAssembly is specified to be run in a safe, sandboxed execution environment. Like other web code, it will enforce the browser's same-origin and permissions policies.
-Don't break the web — WebAssembly is designed so that it plays nicely with other web technologies and maintains backwards compatibility.
-
+\subsection{Correttezza logica}
+Grazie alla sua semantica è possibile dire che il sistema di tipi di WebAssembly è logicamente corretto (\emph{sound})\cite*{wasm:soundness}. Esso infatti garantisce sia \emph{\textbf{type safety}}, che \emph{\textbf{memory safety}}.
+\\Per quanto riguarda la sicurezza rispetto ai tipi, tutti i tipi controllati durante la validazione saranno rispettati anche a runtime:
+\begin{itemize}
+        \item Ogni variabile (locale o globale) conterrà valori del tipo corretto
+        \item Ogni istruzione verrà applicata solo ad operandi del tipo che ci si aspetta e restituirà valori del tipo corretto
+        \item Ogni funzione restituirà valori del tipo previsto, a meno di errori (trap)
+\end{itemize}
+Per quanto riguarda la \emph{memory safety}, è garantito che non verrà acceduta nesun'area di memoria, diversa da quelle esplicitamente specificate dal programma. Ogni volta che per esempio verrà fatta un'operazione di load/store in un certo indirizzo di memoria, si controllerà che quest'ultimo sia nel range di indirizzi possibili per l'istanza attuale di WebAssembly.
+\\Inoltre sono garantite altre proprietà: 
+\begin{itemize}
+        \item L'assenza di comportamenti indefiniti: le regole di esecuzione sono mutualmente consistenti e coprono qualsiasi caso che possa capitare in un programma validato
+        \item L'incapsulamento per funzioni e moduli: nessuna variabile locale può essere acceduta fuori dalla funzione dove è dichiarata e nessun componente di un modulo può essere acceduto fuori dallo stesso a meno che quest'ultimo non sia esportato o importato
+\end{itemize}
+Infine è importante notare che le regole di validazione si occupano solamente dei componenti statici di un programma WebAssembly. Per dimostrare correttezza in maniera precisa, sono state estese le \emph{typing rules} anche ai componenti dinamici, come lo \textbf{store}, le \textbf{configurations} (coppie Store - Thread di esecuzione) e le istruzioni amministrative.
+Dopo aver dato la definizioni di configurazione valida è stato possibile enunciare due teoremi e derivare un corollario che riassumendo dicono che:
+\\Ogni thread in una \emph{configuration} valida o esegue per sempre, o termina con un errore (trap), o termina con un risultato del tipo atteso. Di conseguenza, dato uno \emph{store} valido, nessun calcolo derivante dall'istanzazione o dall'invocazione di un modulo valido, può avere comportamenti diversi da quelli definiti nelle specifiche. \cite*{wasm:soundness:theorems}
 
 \newpage
 \section{WebAssembly System Interface}
