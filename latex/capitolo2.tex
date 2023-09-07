@@ -9,10 +9,12 @@ In particolare si partirà da WebAssembly e dall'interfaccia di sistema WASI, pe
 \section{WebAssembly}
 \label{sec:Wasm}
 WebAssembly (Wasm) è uno standard che definisce un formato binario (.wasm) e un relativo formato testuale (.wat) per la scrittura di codice eseguibile nelle pagine web. 
-\\Esso è nato come integrazione a JavaScript, per consentire l'esecuzione di codice ad una velocità paragonabile a quella del codice nativo.
-\textbf{Il codice WebAssembly è eseguito all'interno di una sandbox garantendo così sicurezza.
-I programmi possono essere compilati da svariati linguaggi di alto livello in moduli Wasm. rendendo possibile l'esecuzione di applicazioni lato client in maniera che prima era impensabile.} MODIFICARE!!!
-Al giorno d'oggi praticamente ogni browser supporta WebAssembly e il suo sviluppo è portato avanti dal \emph{W3C WebAssembly Working Group}
+Wasm è attualmente sviluppato in maniera open-source, da un \emph{Community Group} del W3C che comprende membri di tutti i browser più utilizzati.
+\\Esso è nato principalmente come integrazione a JavaScript, per consentire l'esecuzione di codice ad una velocità paragonabile a quella del codice nativo, grazie alla dimensione ridotta dei file binari generati e alla loro efficienza.
+\\Inoltre grazie all'esecuzione all'interno di una sandbox è garantita un ottima sicurezza, anche sotto il punto di vista della memoria.
+\\Grazie al formato testuale (.wat), è possbile eseguire debug, test, ottimizzazioni, scrivere a mano programmi di basso livello, ma anche visualizzare i sorgenti dei moduli wasm, quando questi sono utilizzati una pagina web.
+\cite*{wasmDesign}
+\\Al giorno d'oggi è in costante crescita, sia il numero di linguaggi che possono avere come \emph{compilation target} WebAssembly (Rust, C, Go, Kotiln, etc), sia il numero di siti che sfruttano tale tecnologia, grazie anche al fatto che praticamente ogni browser attualmente utilizzato, supporta Wasm. 
 
 \subsection{Storia e Origini di WebAssembly}
 \subsubsection{I predecessori}
@@ -20,36 +22,42 @@ Nel 2011 Google rilasciò un progetto open source chiamato \textbf{Native Client
 L'obiettivo era quello di consentire l'esecuzione di codice nativo nel browser all'interno di una sandbox con privilegi limitati.
 In particolare si stava cercando di supportare software che richiedevano grande sforzo computazionale (simulazioni, elaborazioni di audio e video e giochi).
 \\Il progetto si rivelò un successo sotto il punto di vista prestazionale. Vennero infatti rilasciati diversi software e giochi che presentavano prestazioni simili alla rispettiva versione Desktop.
-Non mancavano però diversi problemi. Il codice ottenuto era eseguibile solo nel browser Chrome, era impossibile l'interazione con JavaScript o con altre API sul web.
+Non mancavano però diversi problemi. Il codice ottenuto era eseguibile solo nel browser Chrome ed era impossibile l'interazione con JavaScript o con altre API sul web.
 \\Un tentativo di evoluzione fu presentato nel 2013 dal team di Mozilla. Si trattava di \textbf{asm.js}, un sottoinsieme di JavaScript che consentiva l'invocazione di funzioni scritte in linguaggi come C, C++ o Rust, in diversi browser e direttamente da JavaScript.
-A discapito di una maggior portabilità ci fu una significativa diminuizione delle prestazioni, dovuta alla lentezza dell'interprete JavaScript.
-Queste due soluzioni dimostrarono la possbilità di eseguire codice in una sandbox, o con ottime prestazioni, ma solo all'interno di Chrome (NaCl), oppure in diversi browser ma con prestazioni decisamente inferiori.
-Si voleva quindi trovare un modo per unificare gli enormi vantaggi dei due approcci.\cite*{wasmBook}
-\subsubsection{L'annuncio}
+A discapito di una maggior portabilità ci fu una significativa diminuizione delle prestazioni, dovuta alla lentezza dell'interprete JavaScript, che era stato caricato di un notevole overhead.
+\\Queste due soluzioni dimostrarono la possbilità di eseguire codice in una sandbox, o con ottime prestazioni, ma solo all'interno di Chrome (NaCl), oppure in diversi browser ma con prestazioni decisamente inferiori.
+Si voleva quindi trovare un modo per unificare gli enormi vantaggi offerti da ognuno dei due approcci.\cite*{wasmBook}
+\subsubsection{La nascita di Wasm}
 Fu nel Giugno 2015 che Brendan Eich (creatore di JavaScript), insieme ad altri sviluppatori di Mozilla, annunciarono che lo sviluppo di WebAssembly era cominciato.\cite*{asmjsToWasm}
 Wasm venne presentato come "un nuovo standard open source che definiva un formato e un modello di esecuzione portabile, efficiente in termini di dimensioni e tempo di caricamento, specificamente progettato per essere un target di compilazione per il web".
-Capendo le potenzialità di ciò che stava venendo sviluppato hanno dato il loro contributo al progetto, aziende del calibro di Google, Microsoft, Apple e Unity.
-Nel 2017 venne lanciato il prodotto minimo funzionante (MVP), che conteneva pressochè le stesse funzionalità presenti in asm.js e venne dichiarata conclusa la fase di preview.
+WebAssembly prometteva prestazioni fino a 20 volte superiori rispetto ad asm.js, grazie alla maggiore velocità di decodifica dei file binari rispetto a quella di parsing da parte dell'interprete JavaScript per i file di asm.js.
+Nel 2017 venne lanciato il \emph{minimum viable product} (MVP), che conteneva pressochè le stesse funzionalità presenti in asm.js e venne dichiarata conclusa la fase di preview.
+Capendo le potenzialità di ciò che stava venendo sviluppato hanno dato il loro contributo al progetto, aziende del calibro di Google, Microsoft, Apple, Unity.
 
-\newpage
 \subsection{I concetti chiave di WebAssembly}
-WebAssembly codifica un linguaggio di programmazione di basso livello, simile ad Assembly. Il linguaggio è strutturato attorno ai seguenti concetti:\cite*{wasmSpec}
+WebAssembly codifica un linguaggio di programmazione di basso livello, simile ad Assembly. Tale linguaggio è strutturato attorno ai seguenti concetti:\cite*{wasmSpec}
 
 \subsubsection{Valori}
-In WebAssembly sono presenti 4 tipi di valori numerici. Interi e numeri a virgola mobile, ognuno da 32 o 64 bit (i32, i64, f32, f64), un tipo vector a 128 bit(i128) contenente anch'esso valori numerici (ad esempio da 2 f64, oppure da 4 i32 etc.) ed inoltre è presente un tipo riferimento per puntatori a differenti entità. 
-\\Quest'ultimo è definito "opaco", in quanto non è visibile né la loro dimensione, né la loro rappresentazione in bit. Al contrario i primi due tipi sono "trasparenti".
-\\Infine è anche possibile la rappresentazione di byte non interpretati grazie al tipo \emph{byte}.
+In WebAssembly sono presenti:
+\begin{itemize}
+        \item Un tipo \emph{byte} per la rappresentazione di byte non interpretati
+        \item Quattro tipi di valori numerici: interi e numeri a virgola mobile, ognuno da 32 o 64 bit (\emph{i32, i64, f32, f64})
+        \item Un tipo vector a 128 bit(\emph{i128}) contenente anch'esso valori numerici (ad esempio da 2 f64, oppure da 4 i32 etc.)
+        \item Un tipo riferimento per puntatori a differenti entità.
+\end{itemize}
+Quest'ultimo è definito "opaco", in quanto non è visibile né la loro dimensione, né la loro rappresentazione in bit. Al contrario i primi due tipi si dicono "trasparenti".
+\\Infine è anche possibile .
 \subsubsection{Istruzioni}
-Il modello computazionale di WebAssembly è basato su uno stack. Il codice è costituito da una sequenza di istruzioni eseguite in ordine. Le istruzioni sfruttano un \emph{operand stack} e possono essere di tipo semplice o di controllo.
-\\Le operazioni semplici svolgono manipolazioni basilari sui dati, prelevando (\emph{pop}) parametri dallo stack e inserendo il risultato nello stesso (\emph{push}). Le operazioni di controllo, invece alterano il flusso di esecuzione grazie a costrutti condizionali, blocchi e cicli.
+Il modello computazionale di WebAssembly è basato su uno stack. Il codice è costituito da una sequenza di istruzioni eseguite in ordine. Le istruzioni sfruttano una struttura dati detta \emph{operand stack} e possono essere di tipo semplice, o di controllo.
+\\Le operazioni semplici svolgono manipolazioni basilari sui dati, prelevando parametri dallo stack (\emph{pop}) e inserendo il risultato nello stesso (\emph{push}). Le operazioni di controllo, si occupano invece di alterare il flusso di esecuzione grazie a costrutti condizionali, blocchi e cicli.
 \subsubsection{Traps} 
-Alcune istruzioni possono fallire e generare degli errori (traps) che non è possibile gestire all'interno di WebAssembly. Tali errori vengono infatti lanciati nell'ambiente di esecuzione dell'host, dove invece vengono normalmente gestiti.
+Alcune istruzioni possono fallire e generare degli errori (traps) che non è possibile gestire all'interno di WebAssembly. Tali errori vengono infatti lanciati nell'ambiente di esecuzione dell'host dove, al contrario, vengono normalmente gestiti.
 \subsubsection{Funzioni}
-Il codice è diviso in funzioni. Ognuna di queste ha una certe sequenza di valori sia come parametri che come tipo di ritorno. In una funzione possono inoltre essere chiamate altre funzioni (anche ricorsivamente) e create variabili locali.
-\newpage\subsubsection{Tabelle}
-Una tabella è un array di valori "opachi" di un particolare tipo. Tale struttura consente al programma di ottenere i valori indirettamente attraverso un indice dinamico. Tramite le tabelle è possibile, per esempio invocare funzionii indirettamente, emulando così i puntatori a funzione.
+Il codice è diviso in funzioni. Ognuna di queste ha una certe sequenza di valori sia come parametri che come tipo di ritorno. In una funzione viene eseguita una serie di istruzioni, possono inoltre essere chiamate altre funzioni (anche ricorsivamente) e create variabili locali.
+\subsubsection{Tabelle}
+Una tabella è un array di valori "opachi" di un particolare tipo. Tale struttura consente al programma di ottenere i valori indirettamente attraverso un indice dinamico. Tramite le tabelle è possibile, per esempio invocare funzioni indirettamente, emulando in questo modo i puntatori a funzione.
 \subsubsection{Memoria lineare}
-La memoria lineare è un  array continuo di byte. Ha una dimensione iniziale che può crescere dinamicamente al bisogno. Un programma può leggere e scrivere valore in memoria (operazioni di \emph{load/store}), in qualsiasi indirizzo (anche in maniera non allineata).
+La memoria lineare è un  array continuo di byte. Ha una dimensione iniziale che può crescere dinamicamente al bisogno. Un programma può leggere e scrivere valore in memoria (operazioni di \emph{load/store}) in un qualsiasi indirizzo al suo interno (anche in maniera non allineata).
 \subsubsection{Moduli}
 Un modulo è l'unità di deployment per un programma WebAssembly. Esso conterrà le definizioni di funzioni, tabelle, memoria etc. In un modulo è anche possibile esportare o importare definizioni, inizializzare tabelle o memoria lineare e anche definire una funzione \emph{start} che verrà eseguita automaticamente. 
 \subsubsection{Embedder}
@@ -62,7 +70,6 @@ Solitamente un modulo WebAssembly sarà integrato in un host che ne definirà l'
         \label{fig:wasmArch}
 \end{figure}
 
-\newpage
 \subsection{Le fasi semantiche}
 Nella semantica di WebAssembly è possibile individuare tre fasi principali: decodifica, validazione ed esecuzione.\cite*{wasmSpec}
 \subsubsection{Decodifica}
