@@ -15,7 +15,13 @@ Wasm è attualmente sviluppato in maniera open-source, da un \emph{Community Gro
 \\Grazie al formato testuale (.wat), è possbile eseguire debug, test, ottimizzazioni, scrivere a mano programmi di basso livello, ma anche visualizzare i sorgenti dei moduli wasm, quando questi sono utilizzati una pagina web.
 \cite*{wasmDesign}
 \\Al giorno d'oggi è in costante crescita, sia il numero di linguaggi che possono avere come \emph{compilation target} WebAssembly (Rust, C, Go, Kotiln, etc), sia il numero di siti che sfruttano tale tecnologia, grazie anche al fatto che praticamente ogni browser attualmente utilizzato, supporta Wasm. 
-
+\begin{figure}
+        \begin{center}
+                \includegraphics[width=0.8\columnwidth]{images/wasm.png}
+        \end{center}
+        \caption{WebAssembly all'interno del browser}
+        \label{fig:wasm}
+\end{figure}
 \subsection{Storia e Origini}
 \subsubsection{I predecessori}
 Nel 2011 Google rilasciò un progetto open source chiamato \textbf{Native Client (NaCl)}.
@@ -34,6 +40,26 @@ WebAssembly prometteva prestazioni fino a 20 volte superiori rispetto ad asm.js,
 Nel 2017 venne lanciato il \emph{minimum viable product} (MVP), che conteneva pressochè le stesse funzionalità presenti in asm.js e venne dichiarata conclusa la fase di preview.
 Capendo le potenzialità di ciò che stava venendo sviluppato hanno dato il loro contributo al progetto, aziende del calibro di Google, Microsoft, Apple, Unity.
 
+\subsection{Casi d'uso}
+Inizialmente ci si è concentrati sull'utilizzo di WebAssembly all'interno del browser e venivano presentati svariati casi d'uso:
+\begin{itemize}
+        \item Elaborazione di immagini e video
+        \item Giochi
+        \item Applicazioni peer-to-peer
+        \item Applicazioni CAD
+        \item Realtà virtuale e realtà aumentata con latenza minima
+        \item Riconoscimento di immagini
+        \item Simulazione/emulazioni di sistemi operativi (QEMU, DOSBox)
+        \item Applicazioni per desktop ridimensionamento
+        \item Web server locali
+\end{itemize}
+Si era pensato fin da subito anche alla portabilità ed erano stati presentati diversi possibili utilizzi anche per ambienti non-web:
+\begin{itemize}
+        \item Esecuzione server-side di codice non attendibile
+        \item Servizi per la distribuzione di giochi
+        \item Generiche applicazioni server side
+        \item Calcolo simmetrico, distribuito su più nodi
+\end{itemize}
 \subsection{Concetti chiave}
 WebAssembly codifica un linguaggio di programmazione di basso livello, simile ad Assembly. Tale linguaggio è strutturato attorno ai seguenti concetti:\cite*{wasmSpec}
 
@@ -165,7 +191,17 @@ Per quanto riguarda la \emph{memory safety}, è garantito che non verrà accedut
 Infine è importante notare che le regole di validazione si occupano solamente dei componenti statici di un programma WebAssembly. Per dimostrare correttezza in maniera precisa, sono state estese le \emph{typing rules} anche ai componenti dinamici, come lo \textbf{store}, le \textbf{configurations} (coppie Store - Thread di esecuzione) e le istruzioni amministrative.
 Dopo aver dato la definizioni di configurazione valida è stato possibile enunciare due teoremi e derivare un corollario che riassumendo dicono che:
 \\Ogni thread in una \emph{configuration} valida o esegue per sempre, o termina con un errore (trap), o termina con un risultato del tipo atteso. Di conseguenza, dato uno \emph{store} valido, nessun calcolo derivante dall'istanzazione o dall'invocazione di un modulo valido, può avere comportamenti diversi da quelli definiti nelle specifiche. \cite*{wasm:soundness:theorems}
-
+\subsection{Creazione e utilizzo di moduli WebAssembly}
+Sebbene sia possibile scrivere a mano il codice dei moduli WebAssembly, è molto più comune scrivere il codice in un linguaggio di alto livello e poi compilare quest'ultimo in un modulo Wasm.
+Nonostante durante lo sviluppo iniziale del linguaggio ci si fosse concentrati solo sull'utilizzo di C/C++, ad oggi sono più di 10 i linguaggi che supportano WebAssembly come \emph{compilation target}. Tra questi spiccano Rust, C\#, Python, Kotlin, Swift, Go. 
+\\Per esempio, utilizzando Rust sarebbe sufficiente scrivere un normale programma e poi lanciare il seguente comando nella directory del progetto: 
+\begin{lstlisting}[language=Bash, numbers=none, label=lst:RustCompile, caption={}]
+wasm-pack build
+\end{lstlisting}
+Tale comando compilerà il programma in un modulo WebAssembly, generando un file \textbf{.wasm} utilizzabile dal codice JavaScript della nostra pagina web.
+\\Bisogna però sottolineare che sin dagli albori di WebAssembly, non era mai stata fatta nessuna assunzione sull'ambiente host e che il utilizzo non sarebbe stato limitato alle sole pagine web.
+\\In particolare, per lo scopo di questa tesi, sarà necessario che i moduli WebAssembly vengano istanziati ed eseguiti server side, ma soprattuto che tali moduli abbiano accesso al \textbf{file system} e a funzioni di \textbf{I/O}.
+Tali funzioni in WebAssembly non sono disponibili, a causa dell'esecuzione all'interno di una sandbox e delle caratteristiche di sicurezza. Per questi e per molti altri motivi è stato sviluppato WASI (WebAssembly System Interface).
 \newpage
 \section{WebAssembly System Interface}
 \label{sec:WASI}
