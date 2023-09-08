@@ -213,7 +213,7 @@ WebAssembly System Interface è una famiglia di API progettate dai membri della 
         \item Funzionalità relative al tempo e ai numeri random;
 \end{itemize}
 WASI è progettato in modo da essere indipendente dai browser e da non dipendere da JavaScript o da API web. Inoltre non è limitato dal bisogno di essere compatibile con JavaScript ed ha integrato un sistema di sicurezza \emph{capability based} che consente di estendere le caratteristiche di sandboxing presenti in WebAssembly, rendendo possibile l'I/O.
-\\Attualmente Wasi ha attraversato due fasi di preview (preview0, preview1), le quali dovrebbero essere seguite da due ulteriori preview e infine dalla prima release ufficiale (WASI 1.0).
+\\Attualmente WASI ha attraversato due fasi di preview (preview0, preview1), le quali dovrebbero essere seguite da due ulteriori preview e infine dalla prima release ufficiale (WASI 1.0).
 \subsection{Gli obiettivi}
 WASI è nato con una serie di obiettivi di alto livello, che si ispirano e integrano gli obiettivi di WebAssembly. Esso si propone di:
 \begin{itemize}
@@ -224,6 +224,19 @@ WASI è nato con una serie di obiettivi di alto livello, che si ispirano e integ
         \item Consentire alle proprie API di evolvere nel tempo. Ciò significa anche consentire l'evoluzione di moduli standardizzati e l'introduzione di nuovi moduli. Per garantire compatibilità possono essere create implementazioni dei moduli standardizzati, utilizzando librerie basate su nuove API, consentendo in questo modo una transizione fluida mentre la piattaforma;
 \end{itemize}
 \subsection{I principi di design}
+\subsubsection{Capability}
+WASI segue un concetto di sicurezza basata su capability che era già stata presentata qualche anno prima da CloudABI's.
+\\File, directory, socket e altre risorse sono identificati da indici interi (paragonabili ai file descriptor utilizzati nei sistemi UNIX), contenuti in tabelle esterne che rappresentano le capabilties per un certo modulo WASI.
+Le API di WASI potranno quindi accedere ed utilizzare una risorsa, solo se a questa è associata una deterrminata capability.
+Ad esempio, per l'apertura di un file WASI mette a disposizione una system call simile alla \textbf{openat}.
+Essa si aspetta che il processo chiamante abbia il file descriptor della directory contenente tale file, il quale rappresenterà la capability per l'apertura dei file all'interno di quella specifica directory.
+\\In realtà è anche possibile un approccio più simile alla classica system call "open".
+Infatti, grazie alla pre-apertura di una directory al lancio del programma essa verrà inclusa nella tabella delle capabilties, la quale verrà automaticamente controllata a runtime ogni volta che il programma invocherà la "open".
+\\Tutto ciò è simile a ciò che avviene normalmente in POSIX, con la differenza che POSIX normalmente consente ad un processo di richiedere qualsiasi file descriptor nell'intero file system e poi l'accesso sarà concesso a seconda delle policy di sistema, mentre in WASI è necessario che un programma abbia le capability giuste per accedere alle risorse di una certa directory. In questo modo diventa possbile l'esecuzione di codice non attendibile, dando permessi per specifiche directory a runtime, senza la necessità di impostare permessi nel file system.
+\subsubsection{Interposizione}
+\subsubsection{Compatibilità}
+\subsubsection{Portabilità}
+\subsubsection{Modularità}
 
 \subsection{Rust e WASI}
 \subsection{Struttura di WASI}
