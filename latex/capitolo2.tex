@@ -206,16 +206,18 @@ Tali funzioni in WebAssembly non sono disponibili, a causa dell'esecuzione all'i
 \section{WebAssembly System Interface}
 \label{sec:WASI}
 WebAssembly System Interface è una famiglia di API progettate dai membri della Bytecode Alliance durante lo sviluppo del progetto \textbf{Wasmtime}.\cite*{wasiHome}
-\\WASI si propone di standardizzare l'accesso a varie funzionalità tipicamente associate ai sistemi operativi, da parte di programmi scritti in WebAssembly. Tra queste sono presenti:
+\\WASI si propone di standardizzare l'accesso a varie funzionalità tipicamente associate ai sistemi operativi, da parte di programmi scritti in WebAssembly. In particolare lo sviluppo è partito da una serie di funzioni basiche simili a quelle contenute in POSIX.
+D'ora in avanti queste funzioni verranno spesso menzionate come \textbf{syscall}, in quanto esse hanno uno scopo simile o analogo a quello delle system call in programmi eseguibili nativi.
+Bisogna però tenere a mente che tali "syscall" sono semplicemente una serie di funzioni che permettono di eseguire operazioni di I/O. Ne sono un esempio:
 \begin{itemize}
         \item Accesso a file e File System;
-        \item Socket di Berkeley;
+        \item Funzioni per le socket di Berkeley;
         \item Funzionalità relative al tempo e ai numeri random;
 \end{itemize}
 WASI è progettato in modo da essere indipendente dai browser e da non dipendere da JavaScript o da API web. Inoltre non è limitato dal bisogno di essere compatibile con JavaScript ed ha integrato un sistema di sicurezza \emph{capability based} che consente di estendere le caratteristiche di sandboxing presenti in WebAssembly, rendendo possibile l'I/O.
 \\Attualmente WASI ha attraversato due fasi di preview (preview0, preview1), le quali dovrebbero essere seguite da due ulteriori preview e infine dalla prima release ufficiale (WASI 1.0).
 \subsection{Gli obiettivi}
-WASI è nato con una serie di obiettivi di alto livello, che si ispirano e integrano gli obiettivi di WebAssembly. Esso si propone di:
+WASI è nato con una serie di obiettivi di alto livello, che si ispirano e integrano gli obiettivi di WebAssembly.\cite*{wasi:goals} Esso si propone di:
 \begin{itemize}
         \item Creare un insieme di API progettate direttamente per programmi WebAssembly. Esse devono essere portabili (utilizzabili su diversi sitemi), modulari (composte da più componenti riutilizzabili), indipendenti dal runtime sottostante e devono mantenere la caratteristiche di sicurezza garantite da WebAssembly (sandbox) grazie ad un progettazione basata su \textbf{Capabilties};
         \item Sviluppare e implementare funzionalità in maniera incrementale. Inizialmente si ha un Minimum Viable Product (MVP) che include funzionalità essenziali, che verrà gradualmente espanso aggiungendo nuove feature sulla base di feedback ed esperienze pratiche;
@@ -224,6 +226,7 @@ WASI è nato con una serie di obiettivi di alto livello, che si ispirano e integ
         \item Consentire alle proprie API di evolvere nel tempo. Ciò significa anche consentire l'evoluzione di moduli standardizzati e l'introduzione di nuovi moduli. Per garantire compatibilità possono essere create implementazioni dei moduli standardizzati, utilizzando librerie basate su nuove API, consentendo in questo modo una transizione fluida mentre la piattaforma;
 \end{itemize}
 \subsection{I principi di design}
+WebAssembly System Interface è tutt'ora in fase di sviluppo secondo una serie di \emph{\textbf{design principle}} che verranno illustrati di seguito:\cite*{wasi:designPrinciples}
 \subsubsection{Capability}
 WASI segue un concetto di sicurezza basata su capability che era già stata presentata qualche anno prima da CloudABI's.
 \\File, directory, socket e altre risorse sono identificati da indici interi (paragonabili ai file descriptor utilizzati nei sistemi UNIX), contenuti in tabelle esterne che rappresentano le capabilties per un certo modulo WASI.
@@ -232,11 +235,22 @@ Ad esempio, per l'apertura di un file WASI mette a disposizione una system call 
 Essa si aspetta che il processo chiamante abbia il file descriptor della directory contenente tale file, il quale rappresenterà la capability per l'apertura dei file all'interno di quella specifica directory.
 \\In realtà è anche possibile un approccio più simile alla classica system call "open".
 Infatti, grazie alla pre-apertura di una directory al lancio del programma essa verrà inclusa nella tabella delle capabilties, la quale verrà automaticamente controllata a runtime ogni volta che il programma invocherà la "open".
-\\Tutto ciò è simile a ciò che avviene normalmente in POSIX, con la differenza che POSIX normalmente consente ad un processo di richiedere qualsiasi file descriptor nell'intero file system e poi l'accesso sarà concesso a seconda delle policy di sistema, mentre in WASI è necessario che un programma abbia le capability giuste per accedere alle risorse di una certa directory. In questo modo diventa possbile l'esecuzione di codice non attendibile, dando permessi per specifiche directory a runtime, senza la necessità di impostare permessi nel file system.
+\\Tutto ciò è simile a ciò che avviene normalmente in POSIX, con la differenza che POSIX normalmente consente ad un processo di richiedere qualsiasi file descriptor nell'intero file system e poi l'accesso sarà concesso a seconda delle policy di sistema, mentre in WASI è necessario che un programma abbia le capability giuste per accedere alle risorse di una certa directory. In questo modo diventa possbile l'esecuzione di codice non attendibile, dando permessi per specifiche directory a runtime, senza la necessità di impostare permessi nel file system.\cite*{wasi:capabilities}
 \subsubsection{Interposizione}
+L'interposizione è la capacità di un'istanza di WebAssembly di implementare un'interfaccia WASI che poi potrà essere utilizzata in maniera trasparente da un'altra istanza (consumer).
+Ciò può essere sfruttato per adattare o attenuare le funzionalità di un API WASI, senza cambiare il codice che la utilizza.
+Tale concetto viene anche spesso chiamato "virtualizzazione".
 \subsubsection{Compatibilità}
+La compatibilità con applicazioni e host diversi è un obiettivo primario di WASI. Certe volte però è possibile che essa sia in confliatto con una progettazione chiara delle API, oppure con la sicurezza, le performance o la portabilità.
+Perciò si è cercato di appesantire il meno possibile le API di WASI con aspetti riguardanti la compatibilità e di garantire questo tema grazie all'utilizzo di librerie. Ne è un esempio WASI-libc, libreria costruita on top alle system call di WASI che fornisce una grande varietà di API compatibili con posix (standard I/O, file I/O, gestione della memoria, stringhe etc.).
+In questo modo applicazioni che non hanno bisogno di particolari funzionalità di compatibilità, non verranno appesantite da complessità non necessaria.
 \subsubsection{Portabilità}
+La possibilità di eseguire codice in maniera consistente ed efficace in runtime environment o su piattaforme differenti è molto importante nel contesto di WASI. Bisogna però sottolineare che il significato di portabilità potrebbe variare molto da un API all'altra. Come già introdotto precedentemente WASI nasce come una tecnologia modulare e non necessariamente ogni sua API dovrà essere implementata da ogni WebAssembly Engine.
+La decisione è stata quella di non escludere un API solo perchè alcune tipologie di host non sarebbero in grado di implementarla totalmente.
+\\In ogni caso verranno preferite API che possano essere eseguite in più ambienti possibili, ma la valutazione su cosa sia sufficientemente portabile e cosa no, verrà effettuata caso per caso.
 \subsubsection{Modularità}
+WASI è progettato per offrire svariate interfacce ed è pressochè impossibile che tutte siano appropriate per tutti gli \emph{host environment}. Per questo motivo WASI utilizza un approccio a componenti che consente di descrivere quali API siano adatte per un certo ambiente e quali no. In quaesto modo ci si assicurà che un programma avrà accesso solamente alle interfacce che sono rilevanti per un dato environment.
+\subsection{Architettura di WebAssembly}
 
 \subsection{Rust e WASI}
 \subsection{Struttura di WASI}
