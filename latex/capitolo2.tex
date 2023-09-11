@@ -250,12 +250,58 @@ La decisione è stata quella di non escludere un API solo perchè alcune tipolog
 \\In ogni caso verranno preferite API che possano essere eseguite in più ambienti possibili, ma la valutazione su cosa sia sufficientemente portabile e cosa no, verrà effettuata caso per caso.
 \subsubsection{Modularità}
 WASI è progettato per offrire svariate interfacce ed è pressochè impossibile che tutte siano appropriate per tutti gli \emph{host environment}. Per questo motivo WASI utilizza un approccio a componenti che consente di descrivere quali API siano adatte per un certo ambiente e quali no. In quaesto modo ci si assicurà che un programma avrà accesso solamente alle interfacce che sono rilevanti per un dato environment.
-\subsection{Architettura di WebAssembly}
-
-\subsection{Rust e WASI}
+\subsection{Esempi}
+Per capire meglio che cos'è realmente una system call WASI seguono una serie di esempi riguardanti funzioni che saranno poi invocate anche dal modulo scritto per il prototipo di questa tesi.\cite*{wasi:api}
+Si parte esaminando la funzione \textbf{path\_open} che consente l'apertura di un file o directory.
+\\\textbf{path\_open(fd: fd, dirflags: lookupflags, path: string, oflags: oflags, fs\_rights\_base: rights, fs\_rights\_inheriting: rights, fdflags: fdflags) -> Result<fd, errno>}
+\\\textbf{Parametri}:
+\begin{itemize}
+        \item fd: \textbf{fd};
+        \item dirflags: \textbf{lookupflags} Flag che indica il metodo di risoluzione del path (se il path è un link simbolico esso verrà espanso);
+        \item path: \textbf{string};
+        \item oflags: \textbf{oflags} Flag booleani per indicare il metodo di apertura (creat, directory, excl, trunc);
+        \item fs\_rights\_base: \textbf{rights} Permessi iniziali del file descriptor appena creato. Sono permessi che si applicano esclusivamente ad operazioni fatte usando il file descriptor stesso. Può capitare che l'implementazione restituisca un file descriptor con permessi più restrittivi di quelli specificati, se tali permessi non sono applicabili al tipo di file aperto;
+        \item fs\_rights\_inheriting: \textbf{rights} Permessi che si applicano a file descriptor derivati da quello iniziale;
+        \item fdflags: \textbf{fdflags} Flag per il file descriptor restituito (append, dsync, noblock, rsync, sync);
+\end{itemize}
+\textbf{Risultato}:
+\begin{itemize}
+        \item ok: \textbf{fd} 
+        \item err: \textbf{errno} Codice errore restituito da una funzione (noent, perm, notsock etc.)
+\end{itemize}
+Per capire meglio il funzionamento delle capability, si citano alcuni permessi (\textbf{rights}) applicabili a un file descriptor:
+\begin{itemize}
+        \item fd\_read: \textbf{bool} Permesso di invocare \textbf{fd\_read} e \textbf{sock\_recv}
+        \item fd\_write: \textbf{bool} Permesso di invocare \textbf{fd\_write} e \textbf{sock\_send}
+        \item path\_create\_directory: \textbf{bool} Permesso di invocare \textbf{path\_create\_directory}
+        \item sock\_accept: \textbf{bool} Permesso di invocare \textbf{sock\_accept} 
+\end{itemize}
+Si procede esaminare la funzione \textbf{fd\_read}, simile alla \textbf{readv} di POSIX.
+\\\textbf{fd\_read(fd: fd, iovs: iovec\_array) -> Result<size, errno>}
+\\\textbf{Parametri}:
+\begin{itemize}
+        \item fd: \textbf{fd} File descriptor del file che è stao aperto;
+        \item iovs: \textbf{iovec\_array)} Lista di \emph{scatter/gather vector} in cui contenere i dati letti;
+\end{itemize}
+\textbf{Risultato}:
+\begin{itemize}
+        \item ok: \textbf{size} Numero di byte letti.
+        \item err: \textbf{errno} Codice errore restituito da una funzione (noent, perm, notsock etc.)
+\end{itemize}
+\subsection{Wasmtime}
+Per lo scopo di questa tesi è necessaria l'esecuzione di un modulo WebAssembly, che sfrutti anche API di WASI, all'interno di un server sviluppato nel linguaggio di programmazione Rust.
+Al momento le soluzioni possbili per un embedding di questo tipo, sono diverse (Wasmtime, Wasmer), ma non così numerose.
+Tra queste si è optato per Wasmtime, un progetto sviluppato della Bytecode Alliance.
+\\Wasmtime è un runtime environment standalone, ottimizzato per WebAssembly e WASI.
+Permette di eseguire codice WebAssembly all'esterno del browser in applicazioni di qualsiasi grandezza e scritte in molteplici linguaggi differenti (Rust, C, Python, Go, Ruby, Bash etc.).
+Proprio come in WebAssembly, un'obiettivo di Wasmtime è quello di eseguire codice non attendibile in sicurezza all'interno di una sandbox.
+Inoltre Wasmtime implementa le API di WASI per l'accesso al file system, in modo che un programma possa accedere solo ai file e alle directory per i quali ha le capability.
+\cite*{wasmtime}
+\newpage
 \subsection{Struttura di WASI}
 \subsection{Wasmtime}
 \subsection{Applicazioni e Casistiche d'Uso di WASI}
+\section{Rust}
 
 \newpage
 \section{Node.js}
