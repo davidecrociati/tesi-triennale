@@ -1,4 +1,4 @@
-use std::{io::Read,time::Instant};
+use std::{io::Read,time::{Instant,SystemTime}};
 use serde::{Serialize,Deserialize};
 
 #[derive(Serialize, Deserialize)]
@@ -16,7 +16,7 @@ fn main() {
     let mut serialized_params = String::new();
     std::io::stdin().read_to_string(&mut serialized_params).expect("Failed to read from stdin");
     let editings : Editings = serde_json::from_str(&serialized_params).expect("Deserialization error");
-    println!("[WASI] Deserialized editings [scala: {:?}, ruota: {:?},specchia: {:?}, bw: {:?},contrasto: {:?}, luminosita: {:?}]", editings.scala, editings.ruota, editings.specchia, editings.bw, editings.contrasto, editings.luminosita );
+    //println!("[WASI] Deserialized editings [scala: {:?}, ruota: {:?},specchia: {:?}, bw: {:?},contrasto: {:?}, luminosita: {:?}]", editings.scala, editings.ruota, editings.specchia, editings.bw, editings.contrasto, editings.luminosita );
 
     let filepath = format!("img/uploaded/{}", editings.file_name);
     let mut img;
@@ -51,20 +51,13 @@ fn main() {
     }
     let elapsed_for_editing = now.elapsed();
 
-    let modified_filepath = format!("img/modified/{}", editings.file_name);
+    let modified_filepath = format!("img/modified/{:?}_{}",SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap(), editings.file_name);
 
     now = Instant::now();
     {
         img.save(&modified_filepath).expect("Failed to save image");
     }
     let elapsed_for_saving = now.elapsed();
-    println!("[WASI] Elapsed time for:\n\t-opening: {:.2?}\n\t-editing: {:.2?}\n\t-saving: {:.2?}", elapsed_for_opening,elapsed_for_editing,elapsed_for_saving);
+    print!("{}",modified_filepath);
+    //println!("[WASI] Elapsed time for:\n\t-opening: {:.2?}\n\t-editing: {:.2?}\n\t-saving: {:.2?}", elapsed_for_opening,elapsed_for_editing,elapsed_for_saving);
 }
-
-
-/*
-let mut now = Instant::now();
-{}
-let mut elapsed = now.elapsed();
-println!("Elapsed time for opening: {:.2?}", elapsed);
-*/

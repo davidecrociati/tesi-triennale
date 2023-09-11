@@ -17,3 +17,4 @@ Cargo.lock
 rustAndWasm/*.jpg
 rustAndWasm/*/*/**.jpg
 rustAndWasm/*/*/*/*.jpg
+node/tesi/img/*/*.jpg

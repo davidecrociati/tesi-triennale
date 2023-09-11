@@ -1,3 +1,5 @@
+use std::process::Output;
+
 use actix_web::HttpResponse;
 use actix_multipart::form::{MultipartForm, tempfile::TempFile,text::Text};
 use serde::{Serialize,Deserialize};
@@ -6,7 +8,7 @@ use serde::{Serialize,Deserialize};
 use wasmtime::*;
 use wasmtime_wasi::*;
 use wasmtime_wasi::sync::Dir;
-use wasi_common::{pipe::ReadPipe, WasiCtx};
+use wasi_common::{pipe::{ReadPipe, WritePipe}, WasiCtx};
 #[derive(MultipartForm)]
 pub struct ImageUpload {
     image: TempFile,
@@ -67,7 +69,7 @@ pub fn edit(e : Editings) -> HttpResponse {
     let serialized_input = serde_json::to_string(&e).unwrap();
     println!("input for wasi module: {}", serialized_input);
     let stdin = ReadPipe::from(serialized_input);
-    //let stdout = WritePipe::new_in_memory();
+    let stdout = WritePipe::new_in_memory();
 
     let engine = Engine::default();
     
@@ -77,8 +79,8 @@ pub fn edit(e : Editings) -> HttpResponse {
     let  image_directory = Dir::open_ambient_dir("img", ambient_authority()).unwrap();
     let builder = WasiCtxBuilder::new()
     .stdin(Box::new(stdin.clone()))
-    //.stdout(Box::new(stdout.clone()))
-    .inherit_stdout()
+    .stdout(Box::new(stdout.clone()))
+    //.inherit_stdout()
     .inherit_stderr()
     .preopened_dir(image_directory,"img").unwrap();
 
@@ -100,9 +102,13 @@ pub fn edit(e : Editings) -> HttpResponse {
     instance_main.call(&mut store, ()).unwrap();
     println!("\n\n");
     drop(store);
-        HttpResponse::Ok()
-        .content_type("text/plain")
-        .body(format!("img/modified/{}",e.file_name))
+    
+
+    let contents: Vec<u8> = stdout.try_into_inner().expect("sole remaining reference to WritePipe").into_inner();
+    let out: String = contents.iter().map( |&i|  char::from_u32(i as u32).unwrap()).collect();
+    HttpResponse::Ok()
+    .content_type("text/plain")
+    .body(out)
 
         
 }
