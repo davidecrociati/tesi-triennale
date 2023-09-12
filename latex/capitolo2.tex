@@ -27,7 +27,7 @@ In particolare si stava cercando di supportare software che richiedevano grande 
 \\Il progetto si rivelò un successo sotto il punto di vista prestazionale. Vennero infatti rilasciati diversi software e giochi che presentavano prestazioni simili alla rispettiva versione Desktop.
 Non mancavano però diversi problemi. Il codice ottenuto era eseguibile solo nel browser Chrome ed era impossibile l'interazione con JavaScript o con altre API sul web.
 \\Un tentativo di evoluzione fu presentato nel 2013 dal team di Mozilla. Si trattava di \textbf{asm.js}, un sottoinsieme di JavaScript che consentiva l'invocazione di funzioni scritte in linguaggi come C, C++ o Rust, in diversi browser e direttamente da JavaScript.
-A discapito di una maggior portabilità ci fu una significativa diminuizione delle prestazioni, dovuta alla lentezza dell'interprete JavaScript, che era stato caricato di un notevole overhead.
+A discapito di una maggior portabilità ci fu una significativa diminuzione delle prestazioni, dovuta alla lentezza dell'interprete JavaScript, che era stato caricato di un notevole overhead.
 \\Queste due soluzioni dimostrarono la possbilità di eseguire codice in una sandbox, o con ottime prestazioni, ma solo all'interno di Chrome (NaCl), oppure in diversi browser ma con prestazioni decisamente inferiori.
 Si voleva quindi trovare un modo per unificare gli enormi vantaggi offerti da ognuno dei due approcci.\cite*{wasmBook}
 \subsubsection{La nascita di Wasm}
@@ -256,10 +256,22 @@ Permette di eseguire codice WebAssembly all'esterno del browser in applicazioni 
 Proprio come in WebAssembly, un'obiettivo di Wasmtime è quello di eseguire codice non attendibile in sicurezza all'interno di una sandbox.
 Inoltre Wasmtime implementa le API di WASI per l'accesso al file system, in modo che un programma possa accedere solo ai file e alle directory per i quali ha le capability.
 \cite*{wasmtime}
-\section{Rust}
+\subsection{Rust}
 Come è già stato menzionato, si è scelto Rust come linguaggio di programmazione dove integrare l'esecuzione di moduli WebAssembly.
 Rust è un linguaggio compilato, multi-paradigma, sviluppato nel 2010 da Mozilla in collaborazione con la comunità open-source.\cite*{rust}
-
+Ha guadagnato sempre più popolarità grazie alle prestazioni offerte, alla sicurezza e alla possibilità di avere controlli di basso livello, evitando però errori di programmazione comuni.
+Le caratteristiche più importanti di Rust sono:
+\begin{itemize}
+        \item \textbf{Memory safety}: il concetto di ownership (proprietà) ci assicura che un programma non conterrà bug relativi alla memoria come \textbf{null pointer, dangling pointer, } o data races;
+        \item \textbf{Concorrenza}: Rust fornisce supporto built-in per programmi concorrenti;
+        \item \textbf{Astrazione a costo zero}: è possibile scrivere codice espressivo e leggibile di alto livello con prestazioni equivalenti allo stesso codice, ma di più basso livello;
+        \item \textbf{Ecosistema}: le librerie e gli strumenti (\textbf{crates}), sono facilmente integrabili all'interno dei progetti, grazie anche al package manager cargo che risolve automaticamente le dipendenze;
+        \item \textbf{Multipiattaforma}: Rust supporta svariate architetture e sistemi operativi, rendendolo un ottima scelta per una vasta gamma di applicazioni, dai sistemi embedded, ai web server;
+        \item \textbf{Forte tipizzazione}: La tipizzazione contribuisce alla diminuzione di crash a runtime, catturando molti errori già a tempo di compilazione;
+        \item \textbf{WebAssembly}: WebAssembly consente la compilazione di codice in moduli WebAssembly, consentendo l'esecuzione di codice Rust all'interno del browser o di altri environment WebAssembly;
+\end{itemize}
+Grazie a queste peculiarità Rust si presta ad una grande varietà di casi d'uso, come la programmazione di sistema, lo sviluppo di web application prestazionali grazie per esempio, ai framework Rocket o Actix, sviluppo di giochi e anche di applicazioni per sistemi con poche risorse a disposizione (IoT e sistemi embedded).
+\newpage
 \subsection{Esempi}
 \subsubsection{System Call WASI}
 Per capire meglio che cos'è realmente una system call WASI seguono una serie di esempi riguardanti funzioni che saranno poi invocate anche dal modulo scritto per il prototipo di questa tesi.\cite*{wasi:api}
@@ -376,6 +388,7 @@ Read in from file: Hello, world!
 
 \newpage
 \section{Node.js}
+Node.js è un runtime environment che consente l'esecuzione di codice JavaScript server-side, fornendo una piattaforma versatile ed efficiente per lo sviluppo di applicazioni web scalabili.
 \label{sec:Node}
 \subsection{Panoramica di Node.js}
 \subsection{Vantaggi di Node.js}
