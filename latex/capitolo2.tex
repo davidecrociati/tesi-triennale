@@ -1,8 +1,5 @@
 \chapter{Tecnologie utilizzate}
 \label{chap:2}
-
-\section{Introduzione alle tecnologie}
-\label{sec:IntroduzioneTecnologie}
 Come già introdotto brevemente nel capitolo \ref{chap:1}, per lo scopo di questa tesi si è scelto di confrontare due approcci differenti, ma sempre più utilizzati nelle applicazioni web moderne.
 In particolare si partirà da WebAssembly e dall'interfaccia di sistema WASI, per finire con un'introduzione anche su Node.js.
 
@@ -250,7 +247,21 @@ La decisione è stata quella di non escludere un API solo perchè alcune tipolog
 \\In ogni caso verranno preferite API che possano essere eseguite in più ambienti possibili, ma la valutazione su cosa sia sufficientemente portabile e cosa no, verrà effettuata caso per caso.
 \subsubsection{Modularità}
 WASI è progettato per offrire svariate interfacce ed è pressochè impossibile che tutte siano appropriate per tutti gli \emph{host environment}. Per questo motivo WASI utilizza un approccio a componenti che consente di descrivere quali API siano adatte per un certo ambiente e quali no. In quaesto modo ci si assicurà che un programma avrà accesso solamente alle interfacce che sono rilevanti per un dato environment.
+\subsection{Wasmtime}
+Per lo scopo di questa tesi è necessaria l'esecuzione di un modulo WebAssembly, che sfrutti anche API di WASI, all'interno di un server sviluppato nel linguaggio di programmazione Rust.
+Al momento le soluzioni possbili per un embedding di questo tipo, sono diverse (Wasmtime, Wasmer), ma non così numerose.
+Tra queste si è optato per Wasmtime, un progetto sviluppato della Bytecode Alliance.
+\\Wasmtime è un runtime environment standalone, ottimizzato per WebAssembly e WASI.
+Permette di eseguire codice WebAssembly all'esterno del browser in applicazioni di qualsiasi grandezza e scritte in molteplici linguaggi differenti (Rust, C, Python, Go, Ruby, Bash etc.).
+Proprio come in WebAssembly, un'obiettivo di Wasmtime è quello di eseguire codice non attendibile in sicurezza all'interno di una sandbox.
+Inoltre Wasmtime implementa le API di WASI per l'accesso al file system, in modo che un programma possa accedere solo ai file e alle directory per i quali ha le capability.
+\cite*{wasmtime}
+\section{Rust}
+Come è già stato menzionato, si è scelto Rust come linguaggio di programmazione dove integrare l'esecuzione di moduli WebAssembly.
+Rust è un linguaggio compilato, multi-paradigma, sviluppato nel 2010 da Mozilla in collaborazione con la comunità open-source.\cite*{rust}
+
 \subsection{Esempi}
+\subsubsection{System Call WASI}
 Per capire meglio che cos'è realmente una system call WASI seguono una serie di esempi riguardanti funzioni che saranno poi invocate anche dal modulo scritto per il prototipo di questa tesi.\cite*{wasi:api}
 Si parte esaminando la funzione \textbf{path\_open} che consente l'apertura di un file o directory.
 \\\textbf{path\_open(fd: fd, dirflags: lookupflags, path: string, oflags: oflags, fs\_rights\_base: rights, fs\_rights\_inheriting: rights, fdflags: fdflags) -> Result<fd, errno>}
@@ -277,8 +288,8 @@ Per capire meglio il funzionamento delle capability, si citano alcuni permessi (
         \item sock\_accept: \textbf{bool} Permesso di invocare \textbf{sock\_accept} 
 \end{itemize}
 Si procede esaminare la funzione \textbf{fd\_read}, simile alla \textbf{readv} di POSIX.
-\\\textbf{fd\_read(fd: fd, iovs: iovec\_array) -> Result<size, errno>}
-\\\textbf{Parametri}:
+\textbf{fd\_read(fd: fd, iovs: iovec\_array) -> Result<size, errno>}
+\textbf{Parametri}:
 \begin{itemize}
         \item fd: \textbf{fd} File descriptor del file che è stao aperto;
         \item iovs: \textbf{iovec\_array)} Lista di \emph{scatter/gather vector} in cui contenere i dati letti;
@@ -288,20 +299,80 @@ Si procede esaminare la funzione \textbf{fd\_read}, simile alla \textbf{readv} d
         \item ok: \textbf{size} Numero di byte letti.
         \item err: \textbf{errno} Codice errore restituito da una funzione (noent, perm, notsock etc.)
 \end{itemize}
-\subsection{Wasmtime}
-Per lo scopo di questa tesi è necessaria l'esecuzione di un modulo WebAssembly, che sfrutti anche API di WASI, all'interno di un server sviluppato nel linguaggio di programmazione Rust.
-Al momento le soluzioni possbili per un embedding di questo tipo, sono diverse (Wasmtime, Wasmer), ma non così numerose.
-Tra queste si è optato per Wasmtime, un progetto sviluppato della Bytecode Alliance.
-\\Wasmtime è un runtime environment standalone, ottimizzato per WebAssembly e WASI.
-Permette di eseguire codice WebAssembly all'esterno del browser in applicazioni di qualsiasi grandezza e scritte in molteplici linguaggi differenti (Rust, C, Python, Go, Ruby, Bash etc.).
-Proprio come in WebAssembly, un'obiettivo di Wasmtime è quello di eseguire codice non attendibile in sicurezza all'interno di una sandbox.
-Inoltre Wasmtime implementa le API di WASI per l'accesso al file system, in modo che un programma possa accedere solo ai file e alle directory per i quali ha le capability.
-\cite*{wasmtime}
+\subsubsection{Esempio completo}
+Concludiamo la trattativa su WASI con un esempio completo partendo da un semplice codice Rust che sfrutti il filesystem.
+\\Esso sarà poi compilato in WebAssembly ed infine eseguito da linea di comando grazie al runtime environment Wasmtime.
+Il codice che segue tenta di:
+\begin{itemize}
+        \item Creare un file con nome uguale al valore della variabile "outfile";
+        \item Scrivere in tale file il valore della variabile "greeting";
+        \item Aprire il file appena creato;
+        \item Leggere il contenuto del file e stamparlo su standard output;
+\end{itemize}
+\begin{lstlisting}[language=rust, label=lst:RustWasi, caption={Esempio in Rust}, showstringspaces=false]
+        use std::fs;
+        use std::io::{Read, Write};
+                
+        fn main() {
+            let greeting = "Hello, world!";
+            let outfile = "hello.txt";
+            let mut output_file = fs::File::create(outfile)
+            .expect(&format!("Error creating {}", outfile));
+
+            output_file.write_all(greeting.as_bytes())
+            .expect(&format!("Error writing: {}", outfile));
+        
+            let mut input_file = fs::File::open(outfile)
+            .expect(&format!("Error opening {}", outfile));
+        
+            let mut input = String::new();
+            input_file.read_to_string(&mut input)
+            .expect(&format!("Error reading: {} ", outfile));
+        
+            println!("Read in from file: {}", input);
+        }
+\end{lstlisting}
+A questo punto è necessario compilare il file con \emph{compilation target} WebAssembly. Per fare ciò eseguiamo il comando:
+\begin{lstlisting}[language=Bash, numbers=none]
+cargo build --release --target wasm32-wasi
+        Compiling esempio_wasi v0.1.0 (.\esempio_wasi)
+         Finished release [optimized] target(s) in 1.09s
+\end{lstlisting}
+In questo modo verrà creato il file binario .wasm all'interno della directory \textbf{target/wasm32-wasi/release}.
+\\Se convertiamo tale file nell'equivalente testuale .wat possiamo notare l'utilizzo delle API di WebAssembly System Interface.
+\begin{lstlisting}[language=rust, label=lst:RustWasi, caption={Le API importate di WASI}, showstringspaces=false, numbers=none]
+...
+(import "wasi_snapshot_preview1" "fd_filestat_get" (func (;0;) (type 2)))
+(import "wasi_snapshot_preview1" "fd_seek" (func (;1;) (type 6)))
+(import "wasi_snapshot_preview1" "path_open" (func (;2;) (type 7)))
+(import "wasi_snapshot_preview1" "fd_read" (func (;3;) (type 8)))
+(import "wasi_snapshot_preview1" "fd_write" (func (;4;) (type 8)))
+(import "wasi_snapshot_preview1" "environ_get" (func (;5;) (type 2)))
+(import "wasi_snapshot_preview1" "fd_close" (func (;6;) (type 9)))
+(import "wasi_snapshot_preview1" "fd_prestat_get" (func (;7;) (type 2)))
+(import "wasi_snapshot_preview1" "proc_exit" (func (;8;) (type 0)))
+...
+\end{lstlisting}
+A questo punto possiamo eseguire il file binario grazie a wasmtime. Si noti però che l'esecuzione viene interrotta non appena si tenta di eseguire un'operazione sul filesystem.
+\begin{lstlisting}[language=Bash, showstringspaces=false,numbers=none]
+wasmtime target/wasm32-wasi/release/esempio_wasi.wasm
+    thread 'main' panicked at 'Error creating hello.txt: Custom { kind: Uncategorized, error: "failed to find a pre-opened file descriptor through which \"hello.txt\" could be opened" }', src\main.rs:8:6
+    Error: failed to run main module `target/wasm32-wasi/release/esempio_wasi.wasm`
+    
+    Caused by:
+        0: failed to invoke command default
+        1: error while executing at wasm backtrace:
+  ...
+\end{lstlisting}
+Ciò accade perchè l'host non ha conferito al programma le capability necessarie all'esecuzione di operazioni (come ad esempio la create), su un determinato file descriptor (quello di hello.txt).
+\\Per far sì che il programma possa operare sul file in questione, si deve aggiungere l'opzione \textbf{"- -dir=."} al comando wasmtime. In questo modo, wasmtime aprirà la directory corrente prima dell'esecuzione del modulo Wasm e la renderà disponibile al programma sotto forma di capability, per eseguire operazioni sui file contenuti in essa.
+\begin{lstlisting}[language=Bash, showstringspaces=false, numbers=none]
+wasmtime --dir=. target/wasm32-wasi/release/esempio_wasi.wasm
+Read in from file: Hello, world!
+\end{lstlisting}
+
 \newpage
-\subsection{Struttura di WASI}
-\subsection{Wasmtime}
-\subsection{Applicazioni e Casistiche d'Uso di WASI}
-\section{Rust}
+
 
 \newpage
 \section{Node.js}
