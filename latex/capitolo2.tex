@@ -388,12 +388,31 @@ Read in from file: Hello, world!
 
 \newpage
 \section{Node.js}
-Node.js è un runtime environment che consente l'esecuzione di codice JavaScript server-side, fornendo una piattaforma versatile ed efficiente per lo sviluppo di applicazioni web scalabili.
 \label{sec:Node}
-\subsection{Panoramica di Node.js}
-\subsection{Vantaggi di Node.js}
-\subsection{Ecosistema di Node.js}
-
+Node.js è un runtime environment che consente l'esecuzione di codice JavaScript server-side, fornendo una piattaforma versatile ed efficiente per lo sviluppo di applicazioni web concorrenti e scalabili.
+\subsection{Funzionalità cardine}
+Node.js sta acquisendo sempre più popolarità negli anni grazie alle sue peculiarità che lo rendono un'ottima scelta per una grande varietà di casi d'uso.
+\begin{itemize}
+        \item \textbf{Architettura Event-Driven}: viene usato un modello di I/O asincrono, non bloccante che gestisce in maniera efficiente richieste di I/O concorrenti;
+        \item \textbf{V8 JavaScript Engine}: Node.js è costruito su questo engine, conosciuto per la sua velocità ed efficienza, paragonabile a quella del codice nativo;
+        \item \textbf{NPM}: il core di Node è stato progettato per essere piccolo e snello; i moduli che fanno parte del core si focalizzano su protocolli e formati di uso comune. Per ogni altra cosa, si usa npm NPM un ecosistema di librerie open-source in costante crescita. Gli sviluppatori in questo modo, possono sfruttare migliaia di moduli già pronti per la scrittura di codice;
+        \item \textbf{Thread singolo non bloccante}: in caso di I/O bloccante, un server “tradizionale” usa più thread per limitare l’attesa, ma comunque, ogni thread passa la maggior parte del tempo in attesa di I/O. Andare verso altissimi numeri di thread introduce overhead di context switching e aumenta significativamente l'utilizzo di memoria. Al contrario in Node.js è presente un solo thread che fa continuamente fetching di eventi da una coda. Diventa possbile gestire efficientemente molte richieste concorrenti, senza l'overhead di context-switching dei tradizionali server multi-threaded;
+        \item \textbf{Multipiattaforma}: Node.js può eseguire sia su Windows, che su macOS, che su molte distribuzioni di Linux, garantendo così flessibilità e portabilità;
+\end{itemize}
+\newpage
+\begin{figure}
+        \begin{center}
+                \includegraphics[width=0.47\columnwidth]{images/event-loop.jpeg}
+        \end{center}
+        \caption{Architettura event-driven di Node.js}
+\end{figure}
+\subsection{Casi d'uso}
+\subsubsection{Applicazioni Web}
+Node.js risulta spesso una buona scelta per applicazioni che debbano gestire un alto numero di richieste concorrenti, che implichiano operazioni di I/O, sia da filesystem, che da un database.
+\subsubsection{Microservizi}
+Node.js viene utilizzato anche per lo sviluppo di architetture a microservizi, consentendo la scrittura di piccoli servizi specializzati, ben integrati tra loro. Grazie all'architettura event-based, al thread singolo e alle performance elevate node.js si è ben presto rivelato un'ottima alternativa anche in quest'ambito. Si sottolinea inoltre, che l'approccio a microservizi può migliorare in maniera selettiva la scalabilità e semplificare ampiamente il deployment di applicazioni complesse.
+\subsubsection{Real Time Application}
+Node.js eccelle anche in applicazioni come giochi online, strumenti collaborativi, condivisione di documenti, chat online e molti altri. Tale tipologia di applicazione deve gestire numerose richieste utente che eseguiranno molte operazioni pesanti di I/O. Utilizzando un thread per ogni richiesta, si arriverebbe molto in fretta ad un sovraccarico del server.
 \newpage
 \section{Confronto tra tecnologie}
 \label{sec:Confronto}
