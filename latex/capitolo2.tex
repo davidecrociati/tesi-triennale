@@ -1,17 +1,17 @@
 \chapter{Tecnologie utilizzate}
 \label{chap:2}
-Come già introdotto brevemente nel capitolo \ref{chap:1}, per lo scopo di questa tesi si è scelto di confrontare due approcci differenti, ma sempre più utilizzati nelle applicazioni web moderne.
-In particolare si partirà da WebAssembly e dall'interfaccia di sistema WASI, per finire con un'introduzione anche su Node.js.
+Come già introdotto brevemente nel capitolo \ref{chap:1}, il focus di questa tesi è stato impostato sulla comparazione di due approcci radicalmente distinti, ma entrambi sempre più rilevanti nelle applicazioni web moderne. Si inizierà esaminando l'uso di WebAssembly e dell'interfaccia di sistema WASI, nonché la loro integrazione all'interno di un'applicazione Rust, per poi concludere con un'analisi di Node.js.
 
 \section{WebAssembly}
 \label{sec:Wasm}
-WebAssembly (Wasm) è uno standard che definisce un formato binario (.wasm) e un relativo formato testuale (.wat) per la scrittura di codice eseguibile nelle pagine web. 
-Wasm è attualmente sviluppato in maniera open-source, da un \emph{Community Group} del W3C che comprende membri di tutti i browser più utilizzati.
-\\Esso è nato principalmente come integrazione a JavaScript, per consentire l'esecuzione di codice ad una velocità paragonabile a quella del codice nativo, grazie alla dimensione ridotta dei file binari generati e alla loro efficienza.
-\\Inoltre grazie all'esecuzione all'interno di una sandbox è garantita un ottima sicurezza, anche sotto il punto di vista della memoria.
+WebAssembly (\textbf{Wasm}) è uno standard che definisce un formato \textbf{binario} (.wasm) e un relativo formato \textbf{testuale} (.wat) per la scrittura di codice eseguibile nelle pagine web. 
+Attualmente, il suo sviluppo è gestito in modo open-source da un \emph{Community Group} del W3C, il quale coinvolge sviluppatori dei browser più utilizzati.
+\\Esso è nato principalmente come \textbf{integrazione a JavaScript}, con l'obiettivo di consentire l'esecuzione di codice ad una velocità paragonabile a quella del codice nativo.
+Ciò è possibile grazie alle dimensioni ridotte dei file binari generati e alla loro efficienza.
+\\Inoltre grazie all'esecuzione all'interno di una sandbox garantisce un ottima sicurezza, anche sotto il punto di vista della memoria.
 \\Grazie al formato testuale (.wat), è possbile eseguire debug, test, ottimizzazioni, scrivere a mano programmi di basso livello, ma anche visualizzare i sorgenti dei moduli wasm, quando questi sono utilizzati una pagina web.
 \cite*{wasmDesign}
-\\Al giorno d'oggi è in costante crescita, sia il numero di linguaggi che possono avere come \emph{compilation target} WebAssembly (Rust, C, Go, Kotiln, etc), sia il numero di siti che sfruttano tale tecnologia, grazie anche al fatto che praticamente ogni browser attualmente utilizzato, supporta Wasm. 
+\\Oggi WebAssembly sta vivendo una crescita costante, sia nel numero di linguaggi che possono avere come \emph{compilation target} Wasm (Rust, C, Go, Kotiln, etc), sia nel numero di siti che sfruttano tale tecnologia. Questo successo è dovuto anche al fatto che praticamente tutti i browser attualmente in uso offrono supporto per WebAssembly. 
 \begin{figure}
         \begin{center}
                 \includegraphics[width=0.8\columnwidth]{images/wasm.png}
@@ -20,21 +20,22 @@ Wasm è attualmente sviluppato in maniera open-source, da un \emph{Community Gro
         \label{fig:wasm}
 \end{figure}
 \subsection{Storia e Origini}
+WebAssembly nasce nel 2015, ispirandosi fortemente ad altre due tecnologie preesistenti: Google Native Client e asm.js.
 \subsubsection{I predecessori}
-Nel 2011 Google rilasciò un progetto open source chiamato \textbf{Native Client (NaCl)}.
-L'obiettivo era quello di consentire l'esecuzione di codice nativo nel browser all'interno di una sandbox con privilegi limitati.
-In particolare si stava cercando di supportare software che richiedevano grande sforzo computazionale (simulazioni, elaborazioni di audio e video e giochi).
+\textbf{Native Client (NaCl)} è stato un progetto open source rilasciato nel 2011 da Google.
+L'obiettivo di NaCl era consentire l'esecuzione di codice nativo all'interno del browser, confinato in una \textbf{sandbox} con privilegi limitati.
+In particolare si stava cercando di supportare software che richiedevano grande sforzo computazionale, come simulazioni, elaborazioni audio-video e giochi.
 \\Il progetto si rivelò un successo sotto il punto di vista prestazionale. Vennero infatti rilasciati diversi software e giochi che presentavano prestazioni simili alla rispettiva versione Desktop.
-Non mancavano però diversi problemi. Il codice ottenuto era eseguibile solo nel browser Chrome ed era impossibile l'interazione con JavaScript o con altre API sul web.
+Tuttavia NaCl presentava diverse limitazioni, in quanto il codice ottenuto era eseguibile solo nel browser Chrome ed era impossibile l'interazione con JavaScript o con altre API web.
 \\Un tentativo di evoluzione fu presentato nel 2013 dal team di Mozilla. Si trattava di \textbf{asm.js}, un sottoinsieme di JavaScript che consentiva l'invocazione di funzioni scritte in linguaggi come C, C++ o Rust, in diversi browser e direttamente da JavaScript.
 A discapito di una maggior portabilità ci fu una significativa diminuzione delle prestazioni, dovuta alla lentezza dell'interprete JavaScript, che era stato caricato di un notevole overhead.
-\\Queste due soluzioni dimostrarono la possbilità di eseguire codice in una sandbox, o con ottime prestazioni, ma solo all'interno di Chrome (NaCl), oppure in diversi browser ma con prestazioni decisamente inferiori.
+\\Queste due soluzioni dimostrarono la possbilità di eseguire codice in una sandbox, o con ottime prestazioni, ma solo all'interno di Chrome (NaCl), oppure in diversi browser ma con prestazioni decisamente inferiori (asm.js).
 Si voleva quindi trovare un modo per unificare gli enormi vantaggi offerti da ognuno dei due approcci.\cite*{wasmBook}
 \subsubsection{La nascita di Wasm}
-Fu nel Giugno 2015 che Brendan Eich (creatore di JavaScript), insieme ad altri sviluppatori di Mozilla, annunciarono che lo sviluppo di WebAssembly era cominciato.\cite*{asmjsToWasm}
-Wasm venne presentato come "un nuovo standard open source che definiva un formato e un modello di esecuzione portabile, efficiente in termini di dimensioni e tempo di caricamento, specificamente progettato per essere un target di compilazione per il web".
-WebAssembly prometteva prestazioni fino a 20 volte superiori rispetto ad asm.js, grazie alla maggiore velocità di decodifica dei file binari rispetto a quella di parsing da parte dell'interprete JavaScript per i file di asm.js.
-Nel 2017 venne lanciato il \emph{minimum viable product} (MVP), che conteneva pressochè le stesse funzionalità presenti in asm.js e venne dichiarata conclusa la fase di preview.
+La nascita di WebAssembly è avvenuta nel giugno 2015, quando Brendan Eich (il creatore di JavaScript) insieme ad altri sviluppatori di Mozilla ha annunciato l'inizio dello sviluppo. \cite*{asmjsToWasm}
+Wasm venne presentato come "un nuovo standard open source che definiva un formato e un modello di esecuzione portabile, efficiente in termini di dimensioni e tempo di caricamento, specificamente progettato come target di compilazione per il web".
+WebAssembly prometteva prestazioni fino a 20 volte superiori rispetto ad asm.js, grazie alla maggiore velocità di decodifica dei file binari, rispetto al parsing da parte dell'interprete JavaScript per i file di asm.js.
+\\Nel 2017 è stato lanciato il \emph{minimum viable product} (MVP), che conteneva pressochè le stesse funzionalità presenti in asm.js e venne dichiarata conclusa la fase di preview.
 Capendo le potenzialità di ciò che stava venendo sviluppato hanno dato il loro contributo al progetto, aziende del calibro di Google, Microsoft, Apple, Unity.
 
 \subsection{Casi d'uso}
@@ -65,16 +66,16 @@ In WebAssembly sono presenti:
 \begin{itemize}
         \item Un tipo \emph{byte} per la rappresentazione di byte non interpretati;
         \item Quattro tipi di valori numerici: interi e numeri a virgola mobile, ognuno da 32 o 64 bit (\emph{i32, i64, f32, f64});
-        \item Un tipo vector a 128 bit(\emph{i128}) contenente anch'esso valori numerici (ad esempio da 2 f64, oppure da 4 i32 etc.);
+        \item Un tipo vector a 128 bit (\emph{i128}) contenente anch'esso valori numerici (ad esempio 2 f64, oppure da 4 i32 etc.);
         \item Un tipo riferimento per puntatori a differenti entità;
 \end{itemize}
-Quest'ultimo è definito "opaco", in quanto non è visibile né la loro dimensione, né la loro rappresentazione in bit. Al contrario i primi due tipi si dicono "trasparenti".
-\\Infine è anche possibile .
+Quest'ultimo è definito "opaco", in quanto non ne è visibile né la dimensione, né la rappresentazione in bit. Al contrario i primi due tipi si dicono "trasparenti".
+\newpage
 \subsubsection{Istruzioni}
-Il modello computazionale di WebAssembly è basato su uno stack. Il codice è costituito da una sequenza di istruzioni eseguite in ordine. Le istruzioni sfruttano una struttura dati detta \emph{operand stack} e possono essere di tipo semplice, o di controllo.
+Il modello computazionale di WebAssembly è basato su uno \textbf{stack}. Il codice è costituito da una sequenza di istruzioni eseguite in ordine. Le istruzioni sfruttano una struttura dati detta \emph{operand stack} e possono essere di tipo semplice, o di controllo.
 \\Le operazioni semplici svolgono manipolazioni basilari sui dati, prelevando parametri dallo stack (\emph{pop}) e inserendo il risultato nello stesso (\emph{push}). Le operazioni di controllo, si occupano invece di alterare il flusso di esecuzione grazie a costrutti condizionali, blocchi e cicli.
 \subsubsection{Traps} 
-Alcune istruzioni possono fallire e generare degli errori (traps) che non è possibile gestire all'interno di WebAssembly. Tali errori vengono infatti lanciati nell'ambiente di esecuzione dell'host dove, al contrario, vengono normalmente gestiti.
+Alcune istruzioni possono fallire e generare degli errori (traps) che non è possibile gestire all'interno di WebAssembly. Tali errori vengono infatti lanciati nell'ambiente di esecuzione dell'host dove, al contrario, possono essere catturati e gestiti opportunamente.
 \subsubsection{Funzioni}
 Il codice è diviso in funzioni. Ognuna di queste ha una certe sequenza di valori sia come parametri che come tipo di ritorno. In una funzione viene eseguita una serie di istruzioni, possono inoltre essere chiamate altre funzioni (anche ricorsivamente) e create variabili locali.
 \subsubsection{Tabelle}
@@ -100,15 +101,15 @@ I moduli WebAssembly sono distribuiti in formato binario (.wasm) e per questo è
 \subsubsection{Validazione}
 Dopo aver decodificato i moduli binari, per poterli istanziare, è necessario controllare che questi siano validi.
 La validità è verificata grazie ad un sistema di tipi basato sulla sintassi astratta di un modulo e sul suo contenuto. In particolare per ogni componente della sintassi è presente una regola che specifica le condizioni da rispettare perchè il modulo risulti valido.
+\\Ad esempio viene controllato l'ordine delle istruzioni nel corpo di una funzione assicurandosi che lo stack sia utilizzato nel modo corretto.
 \begin{figure}
         \begin{center}
                 \includegraphics[width=1\columnwidth]{images/wasmSyntax.png}
         \end{center}
-        \caption{La sintassi astratta di WebAssembly}
+        \caption{Una parte della sintassi astratta di WebAssembly}
         \label{fig:wasmSyntax}
 \end{figure}
-\\Ad esempio viene controllato l'ordine delle istruzioni nel corpo di una funzione assicurandosi che lo stack sia utilizzato nel modo corretto.
-Oppure se nelle specifiche esaminiamo un'operazione binaria tra tipi numerici (i32.add, f64.xor etc.), notiamo che essa è del tipo \emph{t.binop} e dato un contesto \(C\) essa è valida solamente con tipo \([t~t]{\rightarrow} [t]\).
+\\Se nelle specifiche esaminiamo un'operazione binaria tra tipi numerici (che quindi avrà due valori in ingresso ed un valore in uscita; es: i32.add, f64.xor etc.), notiamo che essa è del tipo \emph{t.binop} e dato un contesto \(C\) essa è valida solamente con tipo \([t~t]{\rightarrow} [t]\).
 \\Tale regola si può anche rappresentare con la seguente notazione formale:
 \begin{equation*}
 \frac{
@@ -174,21 +175,21 @@ Si noti che sia l'istanziazione, che l'invocazione di funzioni, sono operazioni 
 \subsection{Correttezza logica}
 \label{subsec:soundness}
 Grazie alla sua semantica è possibile dire che il sistema di tipi di WebAssembly è logicamente corretto (\emph{sound})\cite*{wasm:soundness}. Esso infatti garantisce sia \emph{\textbf{type safety}}, che \emph{\textbf{memory safety}}.
-\\Per quanto riguarda la sicurezza rispetto ai tipi, tutti i tipi controllati durante la validazione saranno rispettati anche a runtime:
+\\Per quanto riguarda la type safety, tutti i tipi controllati durante la validazione saranno rispettati anche a runtime:
 \begin{itemize}
         \item Ogni variabile (locale o globale) conterrà valori del tipo corretto.
         \item Ogni istruzione verrà applicata solo ad operandi del tipo che ci si aspetta e restituirà valori del tipo corretto.
         \item Ogni funzione restituirà valori del tipo previsto, a meno di errori (trap).
 \end{itemize}
-Per quanto riguarda la \emph{memory safety}, è garantito che non verrà acceduta nesun'area di memoria, diversa da quelle esplicitamente specificate dal programma. Ogni volta che per esempio verrà fatta un'operazione di load/store in un certo indirizzo di memoria, si controllerà che quest'ultimo sia nel range di indirizzi possibili per l'istanza attuale di WebAssembly.
+Per quanto riguarda la \emph{memory safety}, è garantito che non verrà acceduta nesun'area di memoria, diversa da quelle esplicitamente specificate dal programma. Ogni volta che per esempio, verrà fatta un'operazione di load/store in un certo indirizzo di memoria, si controllerà che quest'ultimo sia nel range di indirizzi possibili per l'istanza attuale di WebAssembly.
 \\Inoltre sono garantite altre proprietà: 
 \begin{itemize}
-        \item L'assenza di comportamenti indefiniti: le regole di esecuzione sono mutualmente consistenti e coprono qualsiasi caso che possa capitare in un programma validato.
-        \item L'incapsulamento per funzioni e moduli: nessuna variabile locale può essere acceduta fuori dalla funzione dove è dichiarata e nessun componente di un modulo può essere acceduto fuori dallo stesso a meno che quest'ultimo non sia esportato o importato.
+        \item L'\textbf{assenza di comportamenti indefiniti}: le regole di esecuzione sono mutualmente consistenti e coprono qualsiasi caso che possa capitare in un programma validato.
+        \item L'\textbf{incapsulamento} per funzioni e moduli: nessuna variabile locale può essere acceduta al di fuori della funzione in cui è dichiarata e nessun componente di un modulo può essere acceduto fuori dallo stesso, a meno che il componente in questione non sia esportato o importato.
 \end{itemize}
 Infine è importante notare che le regole di validazione si occupano solamente dei componenti statici di un programma WebAssembly. Per dimostrare correttezza in maniera precisa, sono state estese le \emph{typing rules} anche ai componenti dinamici, come lo \textbf{store}, le \textbf{configurations} (coppie Store - Thread di esecuzione) e le istruzioni amministrative.
-Dopo aver dato la definizioni di configurazione valida è stato possibile enunciare due teoremi e derivare un corollario che riassumendo dicono che:
-\\Ogni thread in una \emph{configuration} valida o esegue per sempre, o termina con un errore (trap), o termina con un risultato del tipo atteso. Di conseguenza, dato uno \emph{store} valido, nessun calcolo derivante dall'istanzazione o dall'invocazione di un modulo valido, può avere comportamenti diversi da quelli definiti nelle specifiche. \cite*{wasm:soundness:theorems}
+Dopo aver definito nelle specifiche una configurazione valida (una configurazione che rispetti le typing rules) è stato possibile enunciare due teoremi e derivare un corollario.
+\\In sostanza tali teoremi affermano che: ogni thread in una \emph{configuration} valida, o esegue per sempre, o termina con un errore (trap), o termina con un risultato del tipo atteso. Di conseguenza, dato uno \emph{store} valido, nessun calcolo derivato dall'istanzazione o dall'invocazione di un modulo valido, potrà presentare comportamenti diversi da quelli definiti nelle specifiche. \cite*{wasm:soundness:theorems}
 \subsection{Creazione e utilizzo di moduli WebAssembly}
 Sebbene sia possibile scrivere a mano il codice dei moduli WebAssembly, è molto più comune scrivere il codice in un linguaggio di alto livello e poi compilare quest'ultimo in un modulo Wasm.
 Nonostante durante lo sviluppo iniziale del linguaggio ci si fosse concentrati solo sull'utilizzo di C/C++, ad oggi sono più di 10 i linguaggi che supportano WebAssembly come \emph{compilation target}. Tra questi spiccano Rust, C\#, Python, Kotlin, Swift, Go. 
@@ -204,7 +205,8 @@ Tali funzioni in WebAssembly non sono disponibili, a causa dell'esecuzione all'i
 \section{WebAssembly System Interface}
 \label{sec:WASI}
 WebAssembly System Interface è una famiglia di API progettate dai membri della Bytecode Alliance durante lo sviluppo del progetto \textbf{Wasmtime}.\cite*{wasiHome}
-\\WASI si propone di standardizzare l'accesso a varie funzionalità tipicamente associate ai sistemi operativi, da parte di programmi scritti in WebAssembly. In particolare lo sviluppo è partito da una serie di funzioni basiche simili a quelle contenute in POSIX.
+\\WASI si propone di standardizzare l'accesso a varie funzionalità tipicamente associate ai sistemi operativi, da parte di programmi scritti in WebAssembly.
+In particolare, lo sviluppo è partito da una serie di funzioni basiche simili a quelle contenute in POSIX.
 D'ora in avanti queste funzioni verranno spesso menzionate come \textbf{syscall}, in quanto esse hanno uno scopo simile o analogo a quello delle system call in programmi eseguibili nativi.
 Bisogna però tenere a mente che tali "syscall" sono semplicemente una serie di funzioni che permettono di eseguire operazioni di I/O. Ne sono un esempio:
 \begin{itemize}
@@ -212,34 +214,34 @@ Bisogna però tenere a mente che tali "syscall" sono semplicemente una serie di 
         \item Funzioni per le socket di Berkeley;
         \item Funzionalità relative al tempo e ai numeri random;
 \end{itemize}
-WASI è progettato in modo da essere indipendente dai browser e da non dipendere da JavaScript o da API web. Inoltre non è limitato dal bisogno di essere compatibile con JavaScript ed ha integrato un sistema di sicurezza \emph{capability based} che consente di estendere le caratteristiche di sandboxing presenti in WebAssembly, rendendo possibile l'I/O.
+WASI è progettato in modo da essere indipendente dai browser e da non dipendere da JavaScript o da API web. Inoltre utilizza un sistema di sicurezza \emph{capability based} che consente di estendere le caratteristiche di sandboxing presenti in WebAssembly, rendendo possibile l'I/O.
 \\Attualmente WASI ha attraversato due fasi di preview (preview0, preview1), le quali dovrebbero essere seguite da due ulteriori preview e infine dalla prima release ufficiale (WASI 1.0).
 \subsection{Gli obiettivi}
 WASI è nato con una serie di obiettivi di alto livello, che si ispirano e integrano gli obiettivi di WebAssembly.\cite*{wasi:goals} Esso si propone di:
 \begin{itemize}
-        \item Creare un insieme di API progettate direttamente per programmi WebAssembly. Esse devono essere portabili (utilizzabili su diversi sitemi), modulari (composte da più componenti riutilizzabili), indipendenti dal runtime sottostante e devono mantenere la caratteristiche di sicurezza garantite da WebAssembly (sandbox) grazie ad un progettazione basata su \textbf{Capabilties};
+        \item Creare un insieme di API specificamente progettate per programmi WebAssembly. Esse devono essere portabili (utilizzabili su diversi sistemi), modulari (composte da più componenti riutilizzabili), indipendenti dal runtime sottostante e devono mantenere la caratteristiche di sicurezza garantite da WebAssembly (sandbox), integrandole con la presenza di \textbf{Capabilities};
         \item Sviluppare e implementare funzionalità in maniera incrementale. Inizialmente si ha un Minimum Viable Product (MVP) che include funzionalità essenziali, che verrà gradualmente espanso aggiungendo nuove feature sulla base di feedback ed esperienze pratiche;
         \item Arricchire la progettazione delle API con documentazione e test completi e quando possibile, fornire anche implementazioni di riferimento condivisibili tra diversi runtime Wasm;
-        \item Lavorare al fianco degli sviluppatori di strumenti e librerie Wasm in modo da garantire ai loro utenti anche il supporto per WASI;
-        \item Consentire alle proprie API di evolvere nel tempo. Ciò significa anche consentire l'evoluzione di moduli standardizzati e l'introduzione di nuovi moduli. Per garantire compatibilità possono essere create implementazioni dei moduli standardizzati, utilizzando librerie basate su nuove API, consentendo in questo modo una transizione fluida mentre la piattaforma;
+        \item Lavorare al fianco degli sviluppatori di strumenti e librerie Wasm, così da garantire ai loro utenti anche il supporto per WASI;
+        \item Consentire alle proprie API di evolvere nel tempo. Ciò significa anche consentire l'evoluzione di moduli standardizzati e l'introduzione di nuovi moduli. Per garantire compatibilità possono essere create implementazioni dei moduli standardizzati, utilizzando librerie basate su nuove API, consentendo in questo modo una transizione fluida mentre la piattaforma evolve;
 \end{itemize}
 \subsection{I principi di design}
-WebAssembly System Interface è tutt'ora in fase di sviluppo secondo una serie di \emph{\textbf{design principle}} che verranno illustrati di seguito:\cite*{wasi:designPrinciples}
+WebAssembly System Interface è tutt'ora in fase di sviluppo secondo una serie di \emph{\textbf{design principle}} che verranno di seguito illustrati:\cite*{wasi:designPrinciples}
 \subsubsection{Capability}
 WASI segue un concetto di sicurezza basata su capability che era già stata presentata qualche anno prima da CloudABI's.
-\\File, directory, socket e altre risorse sono identificati da indici interi (paragonabili ai file descriptor utilizzati nei sistemi UNIX), contenuti in tabelle esterne che rappresentano le capabilties per un certo modulo WASI.
-Le API di WASI potranno quindi accedere ed utilizzare una risorsa, solo se a questa è associata una deterrminata capability.
+\\File, directory, socket e altre risorse sono identificati da \textbf{indici interi} (paragonabili ai file descriptor utilizzati nei sistemi UNIX), di tabelle esterne che contengono le capabilities per un certo modulo WASI.
+\\Le API di WASI potranno quindi accedere ed utilizzare una risorsa, solo se a questa è associata una deterrminata capability.
 Ad esempio, per l'apertura di un file WASI mette a disposizione una system call simile alla \textbf{openat}.
 Essa si aspetta che il processo chiamante abbia il file descriptor della directory contenente tale file, il quale rappresenterà la capability per l'apertura dei file all'interno di quella specifica directory.
 \\In realtà è anche possibile un approccio più simile alla classica system call "open".
-Infatti, grazie alla pre-apertura di una directory al lancio del programma essa verrà inclusa nella tabella delle capabilties, la quale verrà automaticamente controllata a runtime ogni volta che il programma invocherà la "open".
+Infatti, grazie alla pre-apertura di una directory al lancio del programma essa verrà inclusa nella tabella delle capabilities, la quale verrà automaticamente controllata a runtime ogni volta che il programma invocherà la "open".
 \\Tutto ciò è simile a ciò che avviene normalmente in POSIX, con la differenza che POSIX normalmente consente ad un processo di richiedere qualsiasi file descriptor nell'intero file system e poi l'accesso sarà concesso a seconda delle policy di sistema, mentre in WASI è necessario che un programma abbia le capability giuste per accedere alle risorse di una certa directory. In questo modo diventa possbile l'esecuzione di codice non attendibile, dando permessi per specifiche directory a runtime, senza la necessità di impostare permessi nel file system.\cite*{wasi:capabilities}
 \subsubsection{Interposizione}
 L'interposizione è la capacità di un'istanza di WebAssembly di implementare un'interfaccia WASI che poi potrà essere utilizzata in maniera trasparente da un'altra istanza (consumer).
 Ciò può essere sfruttato per adattare o attenuare le funzionalità di un API WASI, senza cambiare il codice che la utilizza.
 Tale concetto viene anche spesso chiamato "virtualizzazione".
 \subsubsection{Compatibilità}
-La compatibilità con applicazioni e host diversi è un obiettivo primario di WASI. Certe volte però è possibile che essa sia in confliatto con una progettazione chiara delle API, oppure con la sicurezza, le performance o la portabilità.
+La compatibilità con applicazioni e host diversi è un obiettivo primario di WASI. Certe volte, però, è possibile che essa sia in conflitto con una progettazione chiara delle API, oppure con la sicurezza, le performance o la portabilità.
 Perciò si è cercato di appesantire il meno possibile le API di WASI con aspetti riguardanti la compatibilità e di garantire questo tema grazie all'utilizzo di librerie. Ne è un esempio WASI-libc, libreria costruita on top alle system call di WASI che fornisce una grande varietà di API compatibili con posix (standard I/O, file I/O, gestione della memoria, stringhe etc.).
 In questo modo applicazioni che non hanno bisogno di particolari funzionalità di compatibilità, non verranno appesantite da complessità non necessaria.
 \subsubsection{Portabilità}
@@ -247,18 +249,21 @@ La possibilità di eseguire codice in maniera consistente ed efficace in runtime
 La decisione è stata quella di non escludere un API solo perchè alcune tipologie di host non sarebbero in grado di implementarla totalmente.
 \\In ogni caso verranno preferite API che possano essere eseguite in più ambienti possibili, ma la valutazione su cosa sia sufficientemente portabile e cosa no, verrà effettuata caso per caso.
 \subsubsection{Modularità}
-WASI è progettato per offrire svariate interfacce ed è pressochè impossibile che tutte siano appropriate per tutti gli \emph{host environment}. Per questo motivo WASI utilizza un approccio a componenti che consente di descrivere quali API siano adatte per un certo ambiente e quali no. In quaesto modo ci si assicurà che un programma avrà accesso solamente alle interfacce che sono rilevanti per un dato environment.
+WASI è progettato per offrire svariate interfacce ed è pressochè impossibile che tutte siano appropriate per tutti gli \emph{host environment}.
+Per questo motivo WASI utilizza un approccio a \textbf{componenti} che consente di descrivere quali API siano adatte per un certo ambiente e quali no.
+In quaesto modo ci si assicura che un programma avrà accesso solamente alle interfacce che sono rilevanti per un dato environment.
 \subsection{Wasmtime}
-Per lo scopo di questa tesi è necessaria l'esecuzione di un modulo WebAssembly, che sfrutti anche API di WASI, all'interno di un server sviluppato nel linguaggio di programmazione Rust.
-Al momento le soluzioni possbili per un embedding di questo tipo, sono diverse (Wasmtime, Wasmer), ma non così numerose.
-Tra queste si è optato per Wasmtime, un progetto sviluppato della Bytecode Alliance.
-\\Wasmtime è un runtime environment standalone, ottimizzato per WebAssembly e WASI.
+Per lo scopo di questa tesi è necessaria l'esecuzione di un modulo WebAssembly, che sfrutti anche API di WASI, all'interno di un \textbf{server} sviluppato nel linguaggio di programmazione Rust.
+Al momento le soluzioni possbili per un embedding di questo tipo, sono diverse (Wasmtime, Wasmer etc.), ma non così numerose.
+Tra queste si è optato per Wasmtime, un progetto sviluppato della Bytecode Alliance (gli stessi sviluppatori di WASI).
+\\Wasmtime è un \textbf{runtime environment standalone}, ottimizzato per WebAssembly e WASI.
 Permette di eseguire codice WebAssembly all'esterno del browser in applicazioni di qualsiasi grandezza e scritte in molteplici linguaggi differenti (Rust, C, Python, Go, Ruby, Bash etc.).
-Proprio come in WebAssembly, un'obiettivo di Wasmtime è quello di eseguire codice non attendibile in sicurezza all'interno di una sandbox.
-Inoltre Wasmtime implementa le API di WASI per l'accesso al file system, in modo che un programma possa accedere solo ai file e alle directory per i quali ha le capability.
+\\Proprio come in WebAssembly, un'obiettivo di Wasmtime è quello di eseguire codice non attendibile in sicurezza all'interno di una sandbox.
+Inoltre Wasmtime implementa le API di WASI per l'accesso al file system, in modo che un programma possa accedere solo ai file e alle directory per i quali ha le capability necessarie.
 \cite*{wasmtime}
+\newpage
 \subsection{Rust}
-Come è già stato menzionato, si è scelto Rust come linguaggio di programmazione dove integrare l'esecuzione di moduli WebAssembly.
+Come è già stato menzionato, per l'esecuzione di moduli WebAssembly lato server, si è scelto il linguaggio di programmazione Rust.
 Rust è un linguaggio compilato, multi-paradigma, sviluppato nel 2010 da Mozilla in collaborazione con la comunità open-source.\cite*{rust}
 Ha guadagnato sempre più popolarità grazie alle prestazioni offerte, alla sicurezza e alla possibilità di avere controlli di basso livello, evitando però errori di programmazione comuni.
 Le caratteristiche più importanti di Rust sono:
@@ -269,9 +274,9 @@ Le caratteristiche più importanti di Rust sono:
         \item \textbf{Ecosistema}: le librerie e gli strumenti (\textbf{crates}), sono facilmente integrabili all'interno dei progetti, grazie anche al package manager cargo che risolve automaticamente le dipendenze;
         \item \textbf{Multipiattaforma}: Rust supporta svariate architetture e sistemi operativi, rendendolo un ottima scelta per una vasta gamma di applicazioni, dai sistemi embedded, ai web server;
         \item \textbf{Forte tipizzazione}: La tipizzazione contribuisce alla diminuzione di crash a runtime, catturando molti errori già a tempo di compilazione;
-        \item \textbf{WebAssembly}: WebAssembly consente la compilazione di codice in moduli WebAssembly, consentendo l'esecuzione di codice Rust all'interno del browser o di altri environment WebAssembly;
+        \item \textbf{WebAssembly}: Rust consente la compilazione di codice in moduli WebAssembly, consentendo l'esecuzione di codice nativo all'interno del browser o di altri environment WebAssembly;
 \end{itemize}
-Grazie a queste peculiarità Rust si presta ad una grande varietà di casi d'uso, come la programmazione di sistema, lo sviluppo di web application prestazionali grazie per esempio, ai framework Rocket o Actix, sviluppo di giochi e anche di applicazioni per sistemi con poche risorse a disposizione (IoT e sistemi embedded).
+Grazie a queste peculiarità Rust si presta ad una grande varietà di casi d'uso, come la programmazione di sistema, lo sviluppo di web application prestazionali grazie per esempio, ai framework Rocket o Actix, lo sviluppo di giochi ma anche di applicazioni per sistemi con poche risorse a disposizione (IoT e sistemi embedded).
 \newpage
 \subsection{Esempi}
 \subsubsection{System Call WASI}
@@ -295,12 +300,12 @@ Si parte esaminando la funzione \textbf{path\_open} che consente l'apertura di u
 \end{itemize}
 Per capire meglio il funzionamento delle capability, si citano alcuni permessi (\textbf{rights}) applicabili a un file descriptor:
 \begin{itemize}
-        \item fd\_read: \textbf{bool} Permesso di invocare \textbf{fd\_read} e \textbf{sock\_recv}
+        \item fd\_read: \textbf{bool} Permesso di invocare le funzioni \textbf{fd\_read} e \textbf{sock\_recv}
         \item fd\_write: \textbf{bool} Permesso di invocare \textbf{fd\_write} e \textbf{sock\_send}
         \item path\_create\_directory: \textbf{bool} Permesso di invocare \textbf{path\_create\_directory}
         \item sock\_accept: \textbf{bool} Permesso di invocare \textbf{sock\_accept} 
 \end{itemize}
-Si procede esaminare la funzione \textbf{fd\_read}, simile alla \textbf{readv} di POSIX.
+Si procede ad esaminare la funzione \textbf{fd\_read}, simile alla \textbf{readv} di POSIX.
 \textbf{fd\_read(fd: fd, iovs: iovec\_array) -> Result<size, errno>}
 \textbf{Parametri}:
 \begin{itemize}
@@ -327,20 +332,20 @@ Il codice che segue tenta di:
         use std::io::{Read, Write};
                 
         fn main() {
-            let greeting = "Hello, world!";
-            let outfile = "hello.txt";
-            let mut output_file = fs::File::create(outfile)
-            .expect(&format!("Error creating {}", outfile));
+            let to_write = "Esempio WASI!";
+            let file_name = "esempio.txt";
+            let mut output_file = fs::File::create(file_name)
+            .expect(&format!("Error creating {}", file_name));
 
-            output_file.write_all(greeting.as_bytes())
-            .expect(&format!("Error writing: {}", outfile));
+            output_file.write_all(to_write.as_bytes())
+            .expect(&format!("Error writing: {}", file_name));
         
-            let mut input_file = fs::File::open(outfile)
-            .expect(&format!("Error opening {}", outfile));
+            let mut input_file = fs::File::open(file_name)
+            .expect(&format!("Error opening {}", file_name));
         
             let mut input = String::new();
             input_file.read_to_string(&mut input)
-            .expect(&format!("Error reading: {} ", outfile));
+            .expect(&format!("Error reading: {} ", file_name));
         
             println!("Read in from file: {}", input);
         }
@@ -351,8 +356,8 @@ cargo build --release --target wasm32-wasi
         Compiling esempio_wasi v0.1.0 (.\esempio_wasi)
          Finished release [optimized] target(s) in 1.09s
 \end{lstlisting}
-In questo modo verrà creato il file binario .wasm all'interno della directory \textbf{target/wasm32-wasi/release}.
-\\Se convertiamo tale file nell'equivalente testuale .wat possiamo notare l'utilizzo delle API di WebAssembly System Interface.
+In questo modo verrà creato il file binario esempio\_wasi.wasm all'interno della directory \textbf{target/wasm32-wasi/release/}.
+\\Se convertiamo tale file nell'equivalente testuale esempio\_wasi.wat possiamo notare l'utilizzo delle API di WebAssembly System Interface.
 \begin{lstlisting}[language=rust, label=lst:RustWasi, caption={Le API importate di WASI}, showstringspaces=false, numbers=none]
 ...
 (import "wasi_snapshot_preview1" "fd_filestat_get" (func (;0;) (type 2)))
@@ -369,7 +374,7 @@ In questo modo verrà creato il file binario .wasm all'interno della directory \
 A questo punto possiamo eseguire il file binario grazie a wasmtime. Si noti però che l'esecuzione viene interrotta non appena si tenta di eseguire un'operazione sul filesystem.
 \begin{lstlisting}[language=Bash, showstringspaces=false,numbers=none]
 wasmtime target/wasm32-wasi/release/esempio_wasi.wasm
-    thread 'main' panicked at 'Error creating hello.txt: Custom { kind: Uncategorized, error: "failed to find a pre-opened file descriptor through which \"hello.txt\" could be opened" }', src\main.rs:8:6
+    thread 'main' panicked at 'Error creating esempio.txt: Custom { kind: Uncategorized, error: "failed to find a pre-opened file descriptor through which \"esempio.txt\" could be opened" }', src\main.rs:8:6
     Error: failed to run main module `target/wasm32-wasi/release/esempio_wasi.wasm`
     
     Caused by:
@@ -377,11 +382,11 @@ wasmtime target/wasm32-wasi/release/esempio_wasi.wasm
         1: error while executing at wasm backtrace:
   ...
 \end{lstlisting}
-Ciò accade perchè l'host non ha conferito al programma le capability necessarie all'esecuzione di operazioni (come ad esempio la create), su un determinato file descriptor (quello di hello.txt).
+Ciò accade perchè l'host non ha conferito al programma le capability necessarie all'esecuzione di operazioni (come ad esempio la create), su un determinato file descriptor (quello di esempio.txt).
 \\Per far sì che il programma possa operare sul file in questione, si deve aggiungere l'opzione \textbf{"- -dir=."} al comando wasmtime. In questo modo, wasmtime aprirà la directory corrente prima dell'esecuzione del modulo Wasm e la renderà disponibile al programma sotto forma di capability, per eseguire operazioni sui file contenuti in essa.
 \begin{lstlisting}[language=Bash, showstringspaces=false, numbers=none]
 wasmtime --dir=. target/wasm32-wasi/release/esempio_wasi.wasm
-Read in from file: Hello, world!
+Read in from file: Esempio WASI!
 \end{lstlisting}
 
 \newpage
@@ -390,14 +395,14 @@ Read in from file: Hello, world!
 \newpage
 \section{Node.js}
 \label{sec:Node}
-Node.js è un runtime environment che consente l'esecuzione di codice JavaScript server-side, fornendo una piattaforma versatile ed efficiente per lo sviluppo di applicazioni web concorrenti e scalabili.
+Node.js è un \textbf{runtime environment} che consente l'esecuzione di codice JavaScript server-side e fornisce una piattaforma versatile ed efficiente per lo sviluppo di applicazioni web concorrenti e scalabili.
 \subsection{Funzionalità cardine}
-Node.js sta acquisendo sempre più popolarità negli anni grazie alle sue peculiarità che lo rendono un'ottima scelta per una grande varietà di casi d'uso.
+Node.js sta acquisendo sempre più popolarità negli anni grazie alle sue peculiarità che lo rendono un'ottima scelta per una grande varietà di applicazioni. In particolare Node.js si è distinto per: 
 \begin{itemize}
-        \item \textbf{Architettura Event-Driven}: viene usato un modello di I/O asincrono, non bloccante che gestisce in maniera efficiente richieste di I/O concorrenti;
+        \item \textbf{Architettura Event-Driven}: viene usato un modello di I/O asincrono, non bloccante che gestisce in maniera efficiente richieste concorrenti per operazioni di I/O;
         \item \textbf{V8 JavaScript Engine}: Node.js è costruito su questo engine, conosciuto per la sua velocità ed efficienza, paragonabile a quella del codice nativo;
-        \item \textbf{NPM}: il core di Node è stato progettato per essere piccolo e snello; i moduli che fanno parte del core si focalizzano su protocolli e formati di uso comune. Per ogni altra cosa, si usa npm NPM un ecosistema di librerie open-source in costante crescita. Gli sviluppatori in questo modo, possono sfruttare migliaia di moduli già pronti per la scrittura di codice;
-        \item \textbf{Thread singolo non bloccante}: in caso di I/O bloccante, un server “tradizionale” usa più thread per limitare l’attesa, ma comunque, ogni thread passa la maggior parte del tempo in attesa di I/O. Andare verso altissimi numeri di thread introduce overhead di context switching e aumenta significativamente l'utilizzo di memoria. Al contrario in Node.js è presente un solo thread che fa continuamente fetching di eventi da una coda. Diventa possbile gestire efficientemente molte richieste concorrenti, senza l'overhead di context-switching dei tradizionali server multi-threaded;
+        \item \textbf{NPM}: il core di Node è stato progettato per essere piccolo e snello; i moduli che fanno parte del core si focalizzano su protocolli e formati di uso comune. Per ogni altra cosa, si usa npm NPM un ecosistema di librerie open-source in costante crescita. Gli sviluppatori in questo modo, possono sfruttare migliaia di moduli già pronti, per la scrittura di codice;
+        \item \textbf{Thread singolo non bloccante}: in caso di I/O bloccante, un server “tradizionale” usa più thread per limitare l’attesa, ma comunque, ogni thread passa la maggior parte del tempo in attesa di I/O. Andare verso altissimi numeri di thread introduce overhead di context switching e aumenta significativamente l'utilizzo di memoria. Al contrario, in Node.js, è presente un solo thread che fa continuamente fetching di eventi da una coda. In questo modo diventa possbile gestire efficientemente molte richieste concorrenti, senza l'overhead di context-switching dei tradizionali server multi-threaded;
         \item \textbf{Multipiattaforma}: Node.js può eseguire sia su Windows, che su macOS, che su molte distribuzioni di Linux, garantendo così flessibilità e portabilità;
 \end{itemize}
 \newpage
@@ -413,44 +418,42 @@ Node.js risulta spesso una buona scelta per applicazioni che debbano gestire un 
 \subsubsection{Microservizi}
 Node.js viene utilizzato anche per lo sviluppo di architetture a microservizi, consentendo la scrittura di piccoli servizi specializzati, ben integrati tra loro. Grazie all'architettura event-based, al thread singolo e alle performance elevate node.js si è ben presto rivelato un'ottima alternativa anche in quest'ambito. Si sottolinea inoltre, che l'approccio a microservizi può migliorare in maniera selettiva la scalabilità e semplificare ampiamente il deployment di applicazioni complesse.
 \subsubsection{Real Time Application}
-Node.js eccelle anche in applicazioni come giochi online, strumenti collaborativi, condivisione di documenti, chat online e molti altri. Tale tipologia di applicazione deve gestire numerose richieste utente che eseguiranno molte operazioni pesanti di I/O. Utilizzando un thread per ogni richiesta, si arriverebbe molto in fretta ad un sovraccarico del server.
+Node.js eccelle anche in applicazioni come giochi online, strumenti collaborativi, condivisione di documenti, chat online e molti altri. Tale tipologia di applicazione deve gestire numerose richieste utente che eseguiranno molte operazioni pesanti di I/O. Se si utilizzasse un thread per ogni richiesta, si arriverebbe molto in fretta ad un sovraccarico del server.
 \newpage
 \section{Confronto tra tecnologie}
 Al giorno d'oggi può rivelarsi cruciale la scelta di un determinato approccio di sviluppo per la buona riuscita di un progetto. Si procede quindi con un'analisi comparativa tra i due approcci confrontati durante questa tesi, che aiuterà a capire quando uno potrebbe essere preferibile rispetto all'altro.
 \label{sec:Confronto}
 \subsection{Prestazioni}
-Uno degli aspetti chiave di WebAssembly è l'abilità di ottenere prestazioni paragonabili all'esecuzione di codice nativo.
+Uno degli aspetti chiave di WebAssembly è l'abilità di ottenere prestazioni paragonabili all'esecuzione di \textbf{codice nativo}.
 Può inoltre eseguire codice in parallelo con thread multipli.
-Rust inoltre consente di controllare in maniera precisa la memoria e le risorse di sistema, permettendo in questo modo la scrittura di codice altamente ottimizzato che minimizza l'uso di risorse e massimizza la velocità di esecuzione.
+Rust inoltre consente di controllare in maniera precisa la \textbf{memoria e le risorse di sistema}, permettendo in questo modo la scrittura di codice altamente ottimizzato che minimizza l'uso di risorse e massimizza la velocità di esecuzione.
 La combinazione di Rust e WebAssembly, risulta quindi un'ottima scelta quando le prestazioni sono l'elemento chiave di un progetto.
-\\D'altro canto Node.js, grazie al suo approccio event-driven non bloccante e all'utilizzo del JavaScript engine V8, consente di gestire un numero elevato di connessioni in maniera efficiente e di eseguire operazioni di I/O in modo asincrono.
-Bisogna però fare attenzione all'esecuzione di task CPU-intensive che rimarrebbero bloccati per molto tempo nella coda degli eventi.
+\\D'altro canto Node.js, grazie al suo approccio event-driven non bloccante e all'utilizzo del JavaScript engine V8, consente di gestire un \textbf{numero elevato di connessioni} in maniera efficiente e di eseguire operazioni di I/O in modo asincrono.
+Bisogna però fare attenzione all'esecuzione di task CPU-intensive che potrebbero rimanere bloccati per molto tempo nella coda degli eventi.
 \\Sia Node.js che Rust in combinazione con WebAssembly, promettono quindi ottime performance, ma sotto punti di visti totalmente differenti.
-Nella scelta tra i due è quindi fondamentale valutare la natura di un applicazione, cercando di capire se essa sia più orientata all'utilizzo della CPU o del filesystem.
+Nella scelta tra i due è quindi fondamentale valutare la \textbf{natura di un applicazione}, cercando di capire se essa sia più orientata all'utilizzo della CPU o del filesystem.
 \subsection{Sicurezza}
-Sia WebAssembly che Rust garantiscono in modi diversi un elevato livello di sicurezza. In particolare si parla di \textbf{memory safety} sia per l'uno che per l'altro (\ref{subsec:soundness}), ma anche di type safety per WASM, dell'esecuzione all'interno di una sandbox. 
+Sia WebAssembly che Rust garantiscono in modi diversi un elevato livello di sicurezza. In particolare si parla di \textbf{memory safety} sia per l'uno che per l'altro (\ref{subsec:soundness}), ma anche di type safety e di esecuzione confinata in una sandbox per WASM. 
 Sostanzialmente costituiscono un ambiento sicuro e robusto per lo sviluppo e l'esecuzione di software.
 \\Node.js invece può presentare qualche problema derivante dalla tipizzazione debole di JavaScript. Può accadere spesso di incontrare errori a runtime per conversioni inaspettate, o per accesso a variabili \emph{undefined}.
 Viene richiesta quindi una buona diligenza nella scrittura del codice per far sì che gli errori siano gestiti correttamente evitando crash dell'applicazione.
 \\Risulta evidente che Node.js non presenta \emph{by design} lo stesso livello di sicurezza offerto da Rust con WebAssembly.
 \subsection{Facilità di Sviluppo}
-I vantaggi di Rust in termini di sicurezza e prestazioni spiegati precedentemente attirano molto ma per metterli in pratica potrebbe essere necessario uno sforzo iniziale dei programmatori non indifferente.
-La forte tipizzazione di Rust in combinazione col suo compilatore (famoso per la sua rigidità), potrebbero far faticare non poco chi si approccia per la prima volta a Rust.
-Questi due elementi contribuiscono ad una curva di apprendimento già impegnativa a causa delle funzionalità uniche di Rust.
-\\Risulta molto diverso invece un primo approccio a Node.js. L'utilizzo di un linguaggio famoso e ampiamente usato come JavaScript e del package manager NPM pssono accelerare fortemente lo sviluppo.
-\\Può quindi cambiare molto le tempistiche di sviluppo la scelta di un certo approccio, ma con Rust potremmo essere ricompensati con un codice più robusto e affidabile nel tempo. La scelta deve essere guidata dai requisiti di progetto e non dalla voglia di sbrigarsi.
+I vantaggi di Rust in termini di sicurezza e prestazioni, come precedentemente illustrato, sono indubbiamente attraenti. Tuttavia, per tradurre tali vantaggi in risultati concreti, potrebbe essere necessario un notevole sforzo iniziale da parte degli sviluppatori. La forte tipizzazione di Rust, combinata con la rigorosità del suo compilatore, potrebbe rappresentare una sfida considerevole per coloro che si avvicinano al linguaggio per la prima volta. Questi due fattori contribuiscono a rendere ancora più ripida una curva di apprendimento già impegnativa, derivata dalle caratteristiche uniche di Rust.
+\\D'altra parte, un primo approccio a Node.js può risultare notevolmente diverso. L'utilizzo di JavaScript, un linguaggio ampiamente utilizzato, insieme al package manager NPM, può accelerare significativamente il processo di sviluppo.
+\\La scelta tra questi due approcci può influenzare notevolmente le tempistiche di sviluppo complessive. Tuttavia, è importante sottolineare che la decisione dovrebbe essere guidata dai requisiti specifici del progetto e non dalla semplice volontà di accelerare il processo. Inoltre, va considerato che, nonostante le sfide iniziali, l'adozione di Rust potrebbe portare a un codice più robusto e affidabile nel lungo termine.
 \subsection{Scalabilità ed Espandibilità}
 Rust offre diverse possibilità per far fronte ad esigenze di scalabilità. 
-Supporta la programmazione asincrona e grazie alle caratteristiche di esecuzione parallela WebAssembly si possono sfruttare a pieno anche processori multi-core.
-Inoltre è anche consentito lo sviluppo di microservizi e la loro combinazione con Wasm/WASI.
-\\Node.js riesce a scalare orizzontalmente grazie a tecniche di clustering e load balancing.
+Supporta la programmazione asincrona e grazie alle caratteristiche di esecuzione parallela di WebAssembly è possibile sfruttare appieno anche processori multi-core.
+Rust permette lo sviluppo di microservizi e la loro integrazione con Wasm/WASI.
+\\Node.js riesce a scalare orizzontalmente grazie a tecniche di \emph{clustering} e \emph{load balancing}.
 Ciò però è efficace soprattuto per task I/O bound.
-A causa del thread singolo utlizzato da Node.js, la scalabilità per task CPU-intensive è molto limitata.
-Si potrebbere scalare in verticale un singolo server, aumentando le risorse disponibili, ma sono ovviamente presenti limiti pratici.
-\newpage
+A causa dell'utilizzo di un singolo thread in Node.js, la scalabilità per task CPU-intensive è notevolmente limitata.
+Si potrebbere scalare in verticale un singolo server, aumentando le risorse disponibili, ma è importante notare che sono presenti limiti pratici a quest'approccio.
+Infine anche in Node.js è possbile implementare un'architettura a microservizi.
 \section{Conclusioni preliminari}
 \label{sec:ConclusioniTecnologie}
-La comprazione appena fatta, ha evidenziato ancor di più l'importanza di un attenta analisi sui bisogni dell'applicazione che si sta progettando.
-\\In particolare l'approccio basato su Rust in combinazione WebAssembly spicca per le sue prestazioni, per l'elevato livello di sicurezza offerto e per le varie soluzioni a problemi di scalabilità.
-\\D'altro canto Node.js offre una maggior facilità di sviluppo e un'elevata scalabilità per operazioni fortemente I/O bound.
-\\Nel capitolo successivo si cercherà di valutare se tali differenze siano effettivamente visibili in un'applicazione reale, cercando di misurare l'impatto di ciascuna tecnologia nell'ambito di un programma che svolge prevalentemente operazioni CPU-intensive.
+La comprazione appena effettuata, ha ulteriormente enfatizzato l'importanza di condurre un attenta analisi sui requisiti dell'applicazione che si sta progettando.
+In particolare, l'approccio basato su Rust combinato con WebAssembly si distingue per le sue ottime prestazioni, l'alto livello di sicurezza offerto e la sua capacità di risolvere efficacemente problemi legati alla scalabilità.
+\\D'altra parte, Node.js si contraddistingue per la sua facilità di sviluppo e la notevole scalabilità nelle operazioni fortemente orientate all'I/O.
+\\Nel capitolo successivo si cercherà di valutare se tali differenze abbiano un impatto significativo all'interno di un'applicazione reale, cercando di misurare l'influenza di ciascuna tecnologia in un contesto in cui le operazioni sono prevalentemente CPU-intensive.
