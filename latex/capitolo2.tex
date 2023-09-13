@@ -172,6 +172,7 @@ Si noti che sia l'istanziazione, che l'invocazione di funzioni, sono operazioni 
 
 \newpage
 \subsection{Correttezza logica}
+\label{subsec:soundness}
 Grazie alla sua semantica è possibile dire che il sistema di tipi di WebAssembly è logicamente corretto (\emph{sound})\cite*{wasm:soundness}. Esso infatti garantisce sia \emph{\textbf{type safety}}, che \emph{\textbf{memory safety}}.
 \\Per quanto riguarda la sicurezza rispetto ai tipi, tutti i tipi controllati durante la validazione saranno rispettati anche a runtime:
 \begin{itemize}
@@ -415,21 +416,37 @@ Node.js viene utilizzato anche per lo sviluppo di architetture a microservizi, c
 Node.js eccelle anche in applicazioni come giochi online, strumenti collaborativi, condivisione di documenti, chat online e molti altri. Tale tipologia di applicazione deve gestire numerose richieste utente che eseguiranno molte operazioni pesanti di I/O. Utilizzando un thread per ogni richiesta, si arriverebbe molto in fretta ad un sovraccarico del server.
 \newpage
 \section{Confronto tra tecnologie}
+Al giorno d'oggi può rivelarsi cruciale la scelta di un determinato approccio di sviluppo per la buona riuscita di un progetto. Si procede quindi con un'analisi comparativa tra i due approcci confrontati durante questa tesi, che aiuterà a capire quando uno potrebbe essere preferibile rispetto all'altro.
 \label{sec:Confronto}
 \subsection{Prestazioni}
+Uno degli aspetti chiave di WebAssembly è l'abilità di ottenere prestazioni paragonabili all'esecuzione di codice nativo.
+Può inoltre eseguire codice in parallelo con thread multipli.
+Rust inoltre consente di controllare in maniera precisa la memoria e le risorse di sistema, permettendo in questo modo la scrittura di codice altamente ottimizzato che minimizza l'uso di risorse e massimizza la velocità di esecuzione.
+La combinazione di Rust e WebAssembly, risulta quindi un'ottima scelta quando le prestazioni sono l'elemento chiave di un progetto.
+\\D'altro canto Node.js, grazie al suo approccio event-driven non bloccante e all'utilizzo del JavaScript engine V8, consente di gestire un numero elevato di connessioni in maniera efficiente e di eseguire operazioni di I/O in modo asincrono.
+Bisogna però fare attenzione all'esecuzione di task CPU-intensive che rimarrebbero bloccati per molto tempo nella coda degli eventi.
+\\Sia Node.js che Rust in combinazione con WebAssembly, promettono quindi ottime performance, ma sotto punti di visti totalmente differenti.
+Nella scelta tra i due è quindi fondamentale valutare la natura di un applicazione, cercando di capire se essa sia più orientata all'utilizzo della CPU o del filesystem.
 \subsection{Sicurezza}
+Sia WebAssembly che Rust garantiscono in modi diversi un elevato livello di sicurezza. In particolare si parla di \textbf{memory safety} sia per l'uno che per l'altro (\ref{subsec:soundness}), ma anche di type safety per WASM, dell'esecuzione all'interno di una sandbox. 
+Sostanzialmente costituiscono un ambiento sicuro e robusto per lo sviluppo e l'esecuzione di software.
+\\Node.js invece può presentare qualche problema derivante dalla tipizzazione debole di JavaScript. Può accadere spesso di incontrare errori a runtime per conversioni inaspettate, o per accesso a variabili \emph{undefined}.
+Viene richiesta quindi una buona diligenza nella scrittura del codice per far sì che gli errori siano gestiti correttamente evitando crash dell'applicazione.
+\\Risulta evidente che Node.js non presenta \emph{by design} lo stesso livello di sicurezza offerto da Rust con WebAssembly.
 \subsection{Facilità di Sviluppo}
+I vantaggi di Rust in termini di sicurezza e prestazioni spiegati precedentemente attirano molto ma per metterli in pratica potrebbe essere necessario uno sforzo iniziale dei programmatori non indifferente.
+La forte tipizzazione di Rust in combinazione col suo compilatore (famoso per la sua rigidità), potrebbero far faticare non poco chi si approccia per la prima volta a Rust.
+Questi due elementi contribuiscono ad una curva di apprendimento già impegnativa a causa delle funzionalità uniche di Rust.
+\\Risulta molto diverso invece un primo approccio a Node.js. L'utilizzo di un linguaggio famoso e ampiamente usato come JavaScript e del package manager NPM pssono accelerare fortemente lo sviluppo.
+\\Può quindi cambiare molto le tempistiche di sviluppo la scelta di un certo approccio, ma con Rust potremmo essere ricompensati con un codice più robusto e affidabile nel tempo. La scelta deve essere guidata dai requisiti di progetto e non dalla voglia di sbrigarsi.
 \subsection{Scalabilità ed Espandibilità}
-
+Rust offre diverse possibilità per far fronte ad esigenze di scalabilità. 
+Supporta la programmazione asincrona e grazie alle caratteristiche di esecuzione parallela WebAssembly si possono sfruttare a pieno anche processori multi-core.
+Inoltre è anche consentito lo sviluppo di microservizi e la loro combinazione con Wasm/WASI.
+\\Node.js riesce a scalare orizzontalmente grazie a tecniche di clustering e load balancing.
+Ciò però è efficace soprattuto per task I/O bound.
+A causa del thread singolo utlizzato da Node.js, la scalabilità per task CPU-intensive è molto limitata.
+Si potrebbere scalare in verticale un singolo server, aumentando le risorse disponibili, ma sono ovviamente presenti limiti pratici.
 \newpage
 \section{Conclusioni preliminari}
 \label{sec:ConclusioniTecnologie}
-
-\newpage
-\lstinputlisting[label=lst:hello, firstline=2, lastline=4, caption={I directly included a portion of a file}]{code/hello.py}
-
-\begin{lstlisting}[language=Java, label=lst:java, caption={Some code in another language than the default one}]
-public void prepare(AClass foo) {
-        AnotherClass bar = new AnotherClass(foo)
-}
-\end{lstlisting}
