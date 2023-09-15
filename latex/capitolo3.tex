@@ -1,5 +1,25 @@
-\chapter{Capitolo 3}
+\chapter{Prototipo sviluppato}
 \label{chap:3}
+Nel capitolo precedente sono state esaminate le differenze sostanziali tra un'approccio basato su Rust in combinazione con WebAssmebly e uno basato su Node.js.
+In questo capitolo si presenterà il prototipo sviluppato con l'obiettivo di comprendere l'impatto di tali differenze in un'applicazione pratica.
+\section{Descrizione dell'applicazione}
+Il prototipo sviluppato è un applicazione dedicata all'elaborazione digitale di immagini, concepita per simulare un contesto realistico in cui le operazioni richiedono una considerevole quantità di elaborazioni da parte della CPU.
+\\Dato il limitato tempo disponibile, non è stato possibile esplorare a fondo il contesto del \emph{digital image processing}. Sono state invece utilizzate librerie già pronte in entrambe i linguaggi, senza scendere troppo in profondità nella programmazione di basso livello.
+\\L'architettura dell'applicazione seguirà un modello client-server per entrambe le implementazioni.
+In particolare il cliente sarà responsabile di fornire i file da processare e le relative specifiche sulle modifiche da apportare.
+Il servitore eseguirà le modifiche richieste e risponderà al client con il percorso della nuova immagine, la quale sarà pronta per essere scaricata.
+\\Nel processo di selezione delle possibili modifiche da apportare, è stato essenziale individuare due librerie nei rispettivi linguaggi utilizzati.
+Successivamente, per garantire uniformità nelle opzioni di modifica disponibili, sono state estratte le seguenti funzionalità comuni: 
+\begin{itemize}
+    \item ridimensionamento;
+    \item rotazione di 90°;
+    \item ribaltamento in orizzantale;
+    \item conversione in bianco e nero;
+    \item aumento/diminuzione del contrasto;
+    \item aumento/diminuzione di luminosità;
+\end{itemize}
+Tali operazioni sono state selezionate poiché rappresentano funzionalità frequentemente utilizzate anche da utenti comuni, oltre a caratterizzarsi per la loro eterogeneità. Alcune di queste coinvolgono esclusivamente la manipolazione dei pixel, come ad esempio la rotazione e il ribaltamento, mentre altre, come la conversione in scala di grigi o la modifica del contrasto/luminosità, comportano modifiche dirette sui pixel stessi.
+\newpage
 \section{Setup sperimentale}
 \section{Metodologia}
 \section{Implementazione in Rust e Wasm/WASI}
