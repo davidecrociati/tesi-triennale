@@ -1,7 +1,14 @@
-use std::{io::Read,time::{Instant,SystemTime}};
+use std::{io::Read,time::{Instant}};
 use serde::{Serialize,Deserialize};
 
-#[derive(Serialize, Deserialize)]
+
+#[link(wasm_import_module = "host")]
+extern "C" {
+    fn get_input_size() -> i32;
+    fn get_input(ptr: i32);
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Editings{
     scala: f32,
     ruota: bool,
@@ -9,20 +16,40 @@ pub struct Editings{
     bw: bool,
     contrasto: f32,
     luminosita: i32,
-    file_name: String
+    file_path: String,
+    modified_file_path: String
 }
 
 fn main() {
     let mut serialized_params = String::new();
-    std::io::stdin().read_to_string(&mut serialized_params).expect("Failed to read from stdin");
-    let editings : Editings = serde_json::from_str(&serialized_params).expect("Deserialization error");
-    //println!("[WASI] Deserialized editings [scala: {:?}, ruota: {:?},specchia: {:?}, bw: {:?},contrasto: {:?}, luminosita: {:?}]", editings.scala, editings.ruota, editings.specchia, editings.bw, editings.contrasto, editings.luminosita );
+    //std::io::stdin().read_to_string(&mut serialized_params).expect("Failed to read from stdin");
+    //println!("Serialiezed parmas: {}", serialized_params);
+    //let editings : Editings = serde_json::from_str(&serialized_params).expect("Deserialization error");
 
-    let filepath = format!("img/uploaded/{}", editings.file_name);
+    let mem_size = unsafe { get_input_size() };
+
+    let mut buf: Vec<u8> = Vec::with_capacity(mem_size as usize);
+    let ptr = buf.as_mut_ptr();
+    std::mem::forget(ptr);
+
+    let input_buf = unsafe {
+        get_input(ptr as i32);
+        Vec::from_raw_parts(ptr, mem_size as usize, mem_size as usize)
+    };
+
+    println!("input_buf = {:?}", input_buf);
+
+    let editings: Editings = serde_json::from_slice(&input_buf).map_err(|e| {
+        eprintln!("ser: {e}");
+        e
+    }).unwrap();
+
+    println!("[WASI] Deserialized editings [scala: {:?}, ruota: {:?},specchia: {:?}, bw: {:?},contrasto: {:?}, luminosita: {:?}]", editings.scala, editings.ruota, editings.specchia, editings.bw, editings.contrasto, editings.luminosita );
+
     let mut img;
     let mut now = Instant::now();
     {
-        img = image::open(filepath).expect("Failed to open image");    
+        img = image::open(editings.file_path).expect("Failed to open image");    
     }
     let elapsed_for_opening = now.elapsed();
 
@@ -43,21 +70,20 @@ fn main() {
             img = img.grayscale();
         }
         if editings.contrasto != 0.0 {
-            img = img.adjust_contrast(editings.contrasto)
+            img = img.adjust_contrast(editings.contrasto);
         }
         if editings.luminosita != 0 {
-            img = img.brighten(editings.luminosita)
+            img = img.brighten(editings.luminosita);
         }
     }
     let elapsed_for_editing = now.elapsed();
 
-    let modified_filepath = format!("img/modified/{:?}_{}",SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap(), editings.file_name);
 
     now = Instant::now();
     {
-        img.save(&modified_filepath).expect("Failed to save image");
+        img.save(&editings.modified_file_path).expect("Failed to save image");
     }
     let elapsed_for_saving = now.elapsed();
-    print!("{}",modified_filepath);
-    //println!("[WASI] Elapsed time for:\n\t-opening: {:.2?}\n\t-editing: {:.2?}\n\t-saving: {:.2?}", elapsed_for_opening,elapsed_for_editing,elapsed_for_saving);
+    //print!("{}",editings.modified_file_path);
+    println!("[WASI] Elapsed time for:\n\t-opening: {:.2?}\n\t-editing: {:.2?}\n\t-saving: {:.2?}", elapsed_for_opening,elapsed_for_editing,elapsed_for_saving);
 }
