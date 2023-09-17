@@ -1,5 +1,5 @@
 use std::time::SystemTime;
-use actix_web::HttpResponse;
+use actix_web::{HttpResponse, web};
 use actix_multipart::form::{MultipartForm, tempfile::TempFile,text::Text};
 use serde::{Serialize,Deserialize};
 //use anyhow::Result;
@@ -8,6 +8,7 @@ use wasmtime::*;
 use wasmtime_wasi::*;
 use wasmtime_wasi::sync::Dir;
 use wasi_common::{pipe::{ReadPipe, WritePipe}, WasiCtx};
+use crate::common::AppState;
 #[derive(MultipartForm)]
 pub struct ImageUpload {
     image: TempFile,
@@ -30,7 +31,6 @@ pub struct Editings{
     file_path: String,
     modified_file_path: String
 }
-
 pub async fn index() -> HttpResponse {
     HttpResponse::Ok()
         .content_type("text/html")
@@ -38,9 +38,9 @@ pub async fn index() -> HttpResponse {
 }
 
 
-pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
+pub async fn upload(data: web::Data<AppState>, form: MultipartForm<ImageUpload>) -> HttpResponse {
     let new_file_name = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
-    let filepath = format!("img\\uploaded\\{:?}_{}",new_file_name, form.0.file_name.as_str());
+    let filepath = format!("img/uploaded/{:?}_{}",new_file_name, form.0.file_name.as_str());
     println!("Tryng to upload: {:?}...", form.0.file_name.as_str());
     match form.0.image.file.persist(filepath) {
         Ok(_) => {
@@ -56,7 +56,7 @@ pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
                 modified_file_path : format!("img/modified/{:?}_{}",SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap(), form.0.file_name.as_str())
             };
             println!("recvd editings [scala: {:?}, ruota: {:?},specchia: {:?}, bw: {:?},contrasto: {:?}, luminosita: {:?}]", editings.scala, editings.ruota, editings.specchia, editings.bw, editings.contrasto, editings.luminosita );
-            edit(editings)
+            edit(data,editings)
         },
         Err(e) => {
             println!("Error persisting file: {}", e.to_string());
@@ -65,14 +65,8 @@ pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
     }
 }
 
-pub fn edit(e : Editings) -> HttpResponse {
-    //possibile passare parametri con env var, cmd line args or file
-    let serialized_input = serde_json::to_vec(&e).expect("Error serializing input");
-    println!("input for wasi module: {:?}", serialized_input);
-    let mem_size = serialized_input.len() as i32;
-    //let stdin = ReadPipe::from(serialized_input);
-    //let stdout = WritePipe::new_in_memory();
-
+pub fn edit(data: web::Data<AppState>, e : Editings) -> HttpResponse {
+/*
     let engine = Engine::default();
     
     let mut linker: Linker<WasiCtx> = Linker::new(&engine);
@@ -80,20 +74,25 @@ pub fn edit(e : Editings) -> HttpResponse {
 
     let  image_directory = Dir::open_ambient_dir("img", ambient_authority()).expect("Error opening directory");
     let builder = WasiCtxBuilder::new()
-    //.stdin(Box::new(stdin.clone()))
-    //.stdout(Box::new(stdout.clone()))
     .inherit_stdout()
     .inherit_stderr()
     .preopened_dir(image_directory,"img").expect("Error setting preopened dir");
 
     let wasi = builder.build();
     
-    let module = Module::from_file(&engine, "src/server/image_proc_module.wasm").expect("Error creating module from disk file");
-    let mut store = Store::new(&engine, wasi);
-
+    let module = Module::from_file(&engine, "src/server/image_proc_module.wasm").expect("Error creating module from disk file");*/
+    //let engine = data.engine.lock().unwrap();
+    //let wasi = data.wasi_context.lock().unwrap();
+    let mut linker = data.linker.lock().unwrap();
+    let module = data.module.lock().unwrap();
+    
+    let mut store = data.store.lock().unwrap();
+    
     let memory_type = MemoryType::new(1, None);
-    Memory::new(&mut store, memory_type);
-
+    Memory::new(&mut *store, memory_type);
+    let serialized_input = serde_json::to_vec(&e).expect("Error serializing input");
+    let mem_size = serialized_input.len() as i32;
+    
     linker
     .func_wrap("host", "get_input_size", move || -> i32 { mem_size })
     .expect("should define the function");
@@ -116,12 +115,12 @@ pub fn edit(e : Editings) -> HttpResponse {
         )
         .expect("should define the function");
 
-    linker.module(&mut store, "", &module).expect("Error linking store to module");
+    linker.module(&mut *store, "", &module).expect("Error linking store to module");
 
 
-    let instance = linker.instantiate(&mut store, &module).expect("Error istantiating module");
-    let instance_main = instance.get_typed_func::<(), ()>(&mut store, "_start").expect("Error finding main function");
-    instance_main.call(&mut store, ()).expect("Error calling main function");
+    let instance = linker.instantiate(&mut *store, &module).expect("Error istantiating module");
+    let instance_main = instance.get_typed_func::<(), ()>(&mut *store, "_start").expect("Error finding main function");
+    instance_main.call(&mut * store, ()).expect("Error calling main function");
     println!("\n\n");
     drop(store);
     

@@ -1,4 +1,4 @@
-use std::{io::Read,time::{Instant}};
+use std::time::Instant;
 use serde::{Serialize,Deserialize};
 
 
@@ -21,7 +21,7 @@ pub struct Editings{
 }
 
 fn main() {
-    let mut serialized_params = String::new();
+    //let serialized_params = String::new();
     //std::io::stdin().read_to_string(&mut serialized_params).expect("Failed to read from stdin");
     //println!("Serialiezed parmas: {}", serialized_params);
     //let editings : Editings = serde_json::from_str(&serialized_params).expect("Deserialization error");
@@ -37,15 +37,16 @@ fn main() {
         Vec::from_raw_parts(ptr, mem_size as usize, mem_size as usize)
     };
 
-    println!("input_buf = {:?}", input_buf);
+    //println!("input_buf = {:?}", input_buf);
 
     let editings: Editings = serde_json::from_slice(&input_buf).map_err(|e| {
         eprintln!("ser: {e}");
         e
     }).unwrap();
+    println!("[WASI] Editings {:?}",editings);
+    //println!("[WASI] Deserialized editings [scala: {:?}, ruota: {:?},specchia: {:?}, bw: {:?},contrasto: {:?}, luminosita: {:?}]", editings.scala, editings.ruota, editings.specchia, editings.bw, editings.contrasto, editings.luminosita );
 
-    println!("[WASI] Deserialized editings [scala: {:?}, ruota: {:?},specchia: {:?}, bw: {:?},contrasto: {:?}, luminosita: {:?}]", editings.scala, editings.ruota, editings.specchia, editings.bw, editings.contrasto, editings.luminosita );
-
+    image::io::Limits::no_limits();
     let mut img;
     let mut now = Instant::now();
     {
