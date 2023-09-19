@@ -57,11 +57,11 @@ async fn main() -> std::io::Result<()> {
 \end{lstlisting}
 Come si può notare è presente la creazione di un HttpServer e di un istanza di App. Tutti i server actix-web sono costruiti attorno all'istanza di App.
 \textbf{è presente lo state!!!!! cosa fare???} Essa permette infatti, di configurare "regole di ruoting" per risorse di vario tipo, di registrare servizi HTTP e anche di contenere stato di livello applicazione. 
-\\Nel nostro caso sono state configurate due regole di routing. La prima prende in considerazione richieste eseguite alle home del sito, mentre la seconda gestirà richieste per l'upload e la successiva modifica di file. Si noti che entrambe le regole di route mappano le richieste a due funzioni ("index" e "upload") presenti all'interno del file \textbf{handlers.rs} nel modulo server.
+\\Nel nostro caso sono state configurate due regole di routing. La prima prende in considerazione richieste eseguite alle home del sito, mentre la seconda gestirà richieste per l'upload e la successiva modifica di file. Si noti che entrambe le regole di routing mappano le richieste a funzioni presenti all'interno del file \textbf{handlers.rs} nel modulo server.
 \\Successivamente sono stati registrati due servizi HTTP. Entrambi vengono utilizzati per garantire l'accesso a risorse statiche come script Javascript o immagini elaborate dall'applicazione.
 \\Infine, dopo aver stabilito il metodo di dispatching delle richieste ed aver messo a disposizione le risorse necessarie ai clienti si è passati alla scrittura del codice del file "handlers.rs". Tale file, come suggerito dal nome, contiene gli handler delle richieste HTTP, con la conseguente esecuzione di codice WebAssmebly per richieste di modifica di immagini.
 
-\begin{lstlisting}[language=rust, label=lst:RustWasi, caption={Porzione del file main.rs}, showstringspaces=false]
+\begin{lstlisting}[language=Rust, showstringspaces=false]
     #[derive(MultipartForm)]
     pub struct ImageUpload {
         image: TempFile,
@@ -73,15 +73,64 @@ Come si può notare è presente la creazione di un HttpServer e di un istanza di
         bw: Text<bool>
     }
     pub async fn index() -> HttpResponse {
-        HttpResponse::Ok()
-            .content_type("text/html")
+        HttpResponse::Ok().content_type("text/html")
             .body(include_str!("../static/index.html"))
     }
-    pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
-    ...
+    let new_file_name = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
+    let filepath = format!("img/uploaded/{:?}_{}",new_file_name, form.0.file_name.as_str());
+    match form.0.image.file.persist(filepath) {
+            Ok(_) => {
+                
+                let editings = Editings{
+                    scala : form.0.scala.0,
+                    ...
+                };
+                edit(editings)
+            },
+            Err(e) => {
+                HttpResponse::InternalServerError().finish()
+            },
+        }
     }
 \end{lstlisting}
+Dal listato precedente si possono facilmente notare i due endpoint per le richieste alla pagina home e per richieste di upload.
+Per quanto riguarda la prima tipologia di richieste si risponderà ai client semplicemente con un file HTML statico.
+\\Al contrario la gestione delle richieste di upload è notevolmente più complessa e per questo motivo si è deciso di utilizzare una funzione di supporto \textbf{edit()} che si occuperà dell'istanziazione del modulo WASI e della sua esecuzione.
+\\Nel frattempo si noti che la funzione "upload" riceve come parametro un MultipartForm.
+Il framework Actix-Web (ed in particolare il crate actix-multipart) facilita molto la gestione di richieste provenienti da form contenenti campi di input di tipo "file".
+La struct ImageUpload rifletterà i campi contenuti all'interno del form HTML, garantendo in questo modo accesso immedato ai valori inviati al server.
+La funzione quì analizzata rende persistente il file temporaneo ricevuto ed inoltre crea una \emph{struct} di supporto che verrà sfruttata dalla funzione edit(). Tale funzione verrà invocata se e solo se il file è stato reso persistente senza errori.
+\subsection{Integrazione modulo Wasm/WASI}
+Come già sottolineato, per l'esecuzione di codice WebAssmebly, si è deciso di utilizzare il runtime environment \textbf{Wasmtime}. La sua integrazione all'interno di un'applicazione Rust è resa possibile primariamente grazie ai crate \textbf{wasmtime}, \textbf{wasmtime-wasi} e \textbf{wasi-common}.
+\subsubsection{Scambio di dati}
+Prima ancora di iniziare l'implementazione è stato necessario trovare un modo per scambiare dati tra il modulo WebAssmebly e l'host. Per lo scopo di questo prototipo è necessario che il modulo WebAssmebly riceva tutte le elaborazioni da effettuare su un'immagine e il nome del file da modificare, ma come introdotto in sezione \ref{subsub:Valori} una funzione WebAssmebly può accettare solamente valori di tipo numerico.
+\\Grazie alle API WASI sono possibili diverse soluzioni a questo problema, come ad esempio l'utilizzo della memoria lineare, la scrittura su file, la modifica di variabili d'ambiente o la comunicazione tramite standard input.
+Alcuni degli approcci presentati risulterebbero però complicati da implementare e dato che per la nostra applicazione sarebbe sufficiente scambiare una stringa per ottenere tutte le informazioni necessarie si è optato per la comunicazione via \textbf{standard input}.
+\\In particolare verranno effettuate le seguenti operazioni:
+\begin{itemize}
+    \item Serializzazione in formato JSON della struct "Editing" contenente tutte le elaborazioni  e il nome del file da modificare;
+    \item Messa a disposizione sullo standard input del modulo Wasm della stringa ottenuta dalla serializzazione;
+    \item Lettura della stringa dallo standard input del modulo WASI;
+    \item Deserializzazione in una Struct Editing equivalente a quella di partenza;
+\end{itemize}
+\subsubsection{Condizioni necessarie per l'esecuzione}
+Prima di poter eseguire un modulo tramite Wasmtime, sono necessarie diverse operazioni preliminari:
 
+\begin{lstlisting}[language=rust, label=lst:RustWasi, showstringspaces=false]
+let serialized_input = serde_json::to_string(&editing);
+let stdin = ReadPipe::from(serialized_input);
+
+let engine = Engine::default();
+
+let mut linker: Linker<WasiCtx> = Linker::new(&engine);
+wasmtime_wasi::add_to_linker(&mut linker, |s| s); 
+let  image_directory = Dir::open_ambient_dir("img", ambient_authority());
+\end{lstlisting}
+Dopo la serializzazione della struttura dati, la prima operazione necessaria è la creazione dell'Engine Wasmtime. Esso è un contesto globale per la compilazione e l'esecuzione di moduli Wasm, che nel nostro caso adotterà la configurazione di default.
+\\Si procederà poi con l'istanziazione di un linker. Il linker sarà colui che istanzierà.
+
+
+\subsection{Modulo WebAssmebly/WASI}
 
 \newpage
 \section{Implementazione in Node.js}
