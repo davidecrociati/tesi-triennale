@@ -114,21 +114,61 @@ Alcuni degli approcci presentati risulterebbero però complicati da implementare
     \item Deserializzazione in una Struct Editing equivalente a quella di partenza;
 \end{itemize}
 \subsubsection{Condizioni necessarie per l'esecuzione}
-Prima di poter eseguire un modulo tramite Wasmtime, sono necessarie diverse operazioni preliminari:
+Prima di poter eseguire un modulo tramite Wasmtime, sono necessarie diverse operazioni preliminari.
+Dopo aver serializzato la struttura dati, la prima operazione necessaria è la creazione dell'Engine Wasmtime. Esso è un contesto globale per la compilazione e l'esecuzione di moduli Wasm, che nel nostro caso adotterà la configurazione di default.
+\\Si procederà poi con l'istanziazione di un linker. Il linker faciliterà l'istanziazione del modulo Wasm, risolvendo le diverse import (tra cui quelle per le syscall WASI).
+Non bisogna poi dimenticare che per l'architettura di WASI, sarà possibile accedere ai file presenti in una directory, se e solo se il programma avrà la capability necessarie per farlo. 
+Per ottenere le capability per operare sulle immagini caricate dagli utenti, è necessario aprire la cartella "img" prima dell'istanziazione del modulo WASI.
 
-\begin{lstlisting}[language=rust, label=lst:RustWasi, showstringspaces=false]
-let serialized_input = serde_json::to_string(&editing);
-let stdin = ReadPipe::from(serialized_input);
-
-let engine = Engine::default();
-
-let mut linker: Linker<WasiCtx> = Linker::new(&engine);
-wasmtime_wasi::add_to_linker(&mut linker, |s| s); 
-let  image_directory = Dir::open_ambient_dir("img", ambient_authority());
+\begin{lstlisting}[language=rust, showstringspaces=false]
+    let serialized_input = serde_json::to_string(&editing);
+    let stdin = ReadPipe::from(serialized_input);
+    
+    let engine = Engine::default();
+    
+    let mut linker: Linker<WasiCtx> = Linker::new(&engine);
+    wasmtime_wasi::add_to_linker(&mut linker, |s| s); 
+    let  image_directory = Dir::open_ambient_dir("img", ambient_authority());
 \end{lstlisting}
-Dopo la serializzazione della struttura dati, la prima operazione necessaria è la creazione dell'Engine Wasmtime. Esso è un contesto globale per la compilazione e l'esecuzione di moduli Wasm, che nel nostro caso adotterà la configurazione di default.
-\\Si procederà poi con l'istanziazione di un linker. Il linker sarà colui che istanzierà.
+A questo punto è possibile creare e configurare un contesto WASI tramite la struct \textbf{WasiCtxBuilder}.
+In particolare specifichiamo che lo standard input sarà prelevato dall'oggetto contenente la serializzazione, lo standard output e lo standard error saranno ereditati dalla macchina host ed infine verrà fornita una directory "pre-aperta" che sarà disponibile al percorso "img".
+\\Grazie al contesto WASI è ora possibile la creazione dello Store, l'oggetto designato per l'effettiva istanziazione del modulo WebAssmebly. Quest'ultimo conterrà inoltre tutte le funzioni, la memoria, le tabelle e lo stato del programma WebAssmebly.
+\begin{lstlisting}[language=rust, showstringspaces=false]
+    let builder = WasiCtxBuilder::new()
+    .stdin(Box::new(stdin.clone()))
+    .inherit_stdout()
+    .inherit_stderr()
+    .preopened_dir(image_directory,"img");
+    let wasi = builder.build();
+    
+    let mut store = Store::new(&engine, wasi);
+\end{lstlisting}
+Ora risulta inoltre possibile la creazione del modulo WebAssmebly e il suo collegamento con il Linker, per poi finire con l'istanziazione del modulo tramite lo Store fornito.
+\begin{lstlisting}[language=rust, showstringspaces=false]
+    let module = Module::from_file(&engine, "src/server/image_proc_module.wasm");
+    linker.module(&mut store, "", &module) 
+    let instance = linker.instantiate(&mut store, &module);
+\end{lstlisting}
+\subsubsection{Istanziazione}
+L'unica cosa che ora resta da fare è l'effettiva esecuzione della funzione del modulo WebAssmebly.
+Infatti avendo configurato nel modo presentato sopra Store e contesto WASI, il programma possiede già tutti gli argomenti necessari per il corretto funzionamento.
+\\Prima di poter eseguire una funzione è però necessario ottenere un'istanza di \textbf{Func} tramite il modulo WebAssmebly. 
+A questo punto l'esecuzione è possibile grazie al metodo emph{Func::call()}. Terminata verrà eliminato lo store dalla memoria e restituito il percorso dell'immagine modificata al cliente.
+\\Si noti che in questi esempi di codice non è presente alcuna gestione degli errori. Tuttavia nel prototipo sviluppato, l'utente finale otterrà il nuovo percorso del file, se e solo se ognuna delle operazioni illustrate sarà andata a buon fine.
+\begin{lstlisting}[language=rust, showstringspaces=false]
+    let instance_main = instance.get_typed_func::<(), ()>(&mut store, "_start");
+    instance_main.call(&mut store, ());
+    drop(store);
+    HttpResponse::Ok()
+    .content_type("text/plain")
+    .body(e.modified_file_path)
+\end{lstlisting}
 
+
+\begin{lstlisting}[language=rust, showstringspaces=false]
+\end{lstlisting}
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Notiamo anche che la funzione richiesta è chiamata \emph{\_start}.
 
 \subsection{Modulo WebAssmebly/WASI}
 
