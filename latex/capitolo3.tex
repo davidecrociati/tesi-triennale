@@ -4,10 +4,10 @@ Nel capitolo precedente sono state esaminate le differenze sostanziali tra un'ap
 In questo capitolo si presenterà il prototipo sviluppato con l'obiettivo di comprendere l'impatto di tali differenze in un'applicazione pratica.
 \section{Descrizione dell'applicazione}
 Il prototipo sviluppato è un applicazione dedicata all'elaborazione digitale di immagini, concepita per simulare un contesto realistico in cui le operazioni richiedono una considerevole quantità di elaborazioni da parte della CPU.
-\\Dato il limitato tempo disponibile, non è stato possibile esplorare a fondo il contesto del \emph{digital image processing}. Sono state invece utilizzate librerie già pronte in entrambe i linguaggi, senza scendere troppo in profondità nella programmazione di basso livello.
-\\L'architettura dell'applicazione seguirà un modello client-server per entrambe le implementazioni.
-In particolare il cliente sarà responsabile di fornire i file da processare e le relative specifiche sulle modifiche da apportare.
-Il servitore eseguirà le modifiche richieste e risponderà al client con il percorso della nuova immagine, la quale sarà pronta per essere scaricata.
+\\Dato il limitato tempo disponibile, non è stato possibile esplorare in dettaglio il vasto campo del \emph{digital image processing}. Pertanto, sono state impiegate librerie preesistenti in entrambi i linguaggi, evitando di immergersi eccessivamente nella programmazione di basso livello.
+\\L'architettura dell'applicazione segue un modello client-server in entrambe le implementazioni.
+Il cliente ha il compito di fornire i file da elaborare insieme alle relative specifiche sulle modifiche da apportare.
+Il server eseguirà le modifiche richieste e restituirà al cliente il percorso della nuova immagine, pronta per il download.
 \\Nel processo di selezione delle possibili modifiche da apportare, è stato essenziale individuare due librerie nei rispettivi linguaggi utilizzati.
 Successivamente, per garantire uniformità nelle opzioni di modifica disponibili, sono state estratte le seguenti funzionalità comuni: 
 \begin{itemize}
@@ -15,19 +15,19 @@ Successivamente, per garantire uniformità nelle opzioni di modifica disponibili
     \item rotazione di 90°;
     \item ribaltamento in orizzantale;
     \item conversione in bianco e nero;
-    \item aumento/diminuzione del contrasto;
-    \item aumento/diminuzione di luminosità;
+    \item regolazione del contrasto;
+    \item modifica della luminosità;
 \end{itemize}
-Tali operazioni sono state selezionate poiché rappresentano funzionalità frequentemente utilizzate anche da utenti comuni, oltre a caratterizzarsi per la loro eterogeneità. Alcune di queste coinvolgono esclusivamente la manipolazione dei pixel, come ad esempio la rotazione e il ribaltamento, mentre altre, come la conversione in scala di grigi o la modifica del contrasto/luminosità, comportano modifiche dirette sui pixel stessi.
+Tali operazioni sono state selezionate poiché rappresentano funzionalità frequentemente utilizzate anche da utenti comuni, oltre a caratterizzarsi per la loro eterogeneità. Alcune di queste coinvolgono esclusivamente la manipolazione dei pixel, come ad esempio la rotazione e il ribaltamento, mentre altre, come la conversione in scala di grigi o la modifica del contrasto/luminosità, comportano modifiche dirette ai pixel stessi.
 \newpage
 \section{Setup sperimentale}
 \section{Metodologia}
 \newpage
 \section{Implementazione in Rust e Wasm/WASI}
-Per quanto riguarda l'implementazione si è deciso di partire dal prototipo sviluppato in Rust in quanto era l'elemento maggiormente innovativo e dispendioso in termini di tempo impiegato.
+Per quanto riguarda l'implementazione si è deciso di partire dal prototipo sviluppato in Rust poiché rappresentava l'aspetto più innovativo e richiedeva un considerevole impegno in termini di tempo.
 \\Si è resa inoltre necessaria la ricerca di un framework che consentisse la creazione di un web server per la gestione delle richieste utente.
 \\La scelta è ricaduta su actix-web, un web framework potente ed estremamente veloce per Rust.
-\\Il client è costituito una semplice pagina html contenente un form per il caricamento delle immagini e due riquadri che mostrano l'immagine pre e post modifiche. Tale pagina eseguirà una richiesta AJAX al server, il quale restituirà il percorso della nuova immagine elaborata per scaricarla.
+\\Il client è costituito una semplice pagina html contenente un form per il caricamento delle immagini e due riquadri che mostrano l'immagine pre e post modifiche. Tale pagina eseguirà una richiesta AJAX al server, inviando il file da elaborare e le relative specifiche sulle modifiche. Successivamente il server restituirà il percorso della nuova immagine elaborata pronta per essere scaricata.
 \begin{figure}
     \begin{center}
             \includegraphics[width=1\columnwidth]{images/client.png}
@@ -36,10 +36,11 @@ Per quanto riguarda l'implementazione si è deciso di partire dal prototipo svil
     \label{fig:client}
 \end{figure}
 \subsection{Actix-Web}
-Lo studio del funzionamento di base del framework Actix-Web ha costituito un punto focale durante la prima fase dell'implementazione.
-\\Tale framework si è dimostrato estremamente flessibile ed adatto per lo sviluppo di un prototipo come quello di questa tesi.
-Grazie all'utilizzo di \textbf{extractors}, di \textbf{handlers} e di altre funzionalità presenti, la gestione di richieste HTTP risulta semplice ed immediata.
-\\Si è deciso di strutturare l'applicazione in diversi file, garantendo così una maggior pulizia e manutenibilità del codice. Il principale tra questi è \textbf{main.rs}.
+Lo studio del funzionamento di base del framework Actix-Web ha costituito un punto focale nella fase inziale dell'implementazione.
+\\Tale framework si è dimostrato estremamente flessibile ed adatto per lo sviluppo del prototipo in questione.
+Grazie all'impiego di \textbf{extractors}, di \textbf{handlers} e di altre funzionalità integrate, la gestione di richieste HTTP è risultata intuitiva e diretta.
+\\La decisione di strutturare l'applicazione utilizzando diversi file è stata presa al fine di garantire un codice più ordinato e manutenibile.
+Tra tutti i file, il principale è \textbf{main.rs}, che svolge un ruolo centrale nell'architettura complessiva.
 \begin{lstlisting}[language=rust, label=lst:RustWasi, caption={Porzione del file main.rs}, showstringspaces=false]
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
@@ -56,18 +57,19 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 \end{lstlisting}
-Come si può notare è presente la creazione di un HttpServer e di un istanza di App. In Actix-web ogni server è costruiti attorno all'istanza di App.
-\textbf{è presente lo state!!!!! cosa fare???} Essa permette infatti, di configurare "regole di ruoting" per risorse di vario tipo, di registrare servizi HTTP e anche di contenere stato di livello applicazione. 
-\\Nel nostro caso sono state configurate due regole di routing che si riferiscono a: 
+Nel frammento di codice fornito, viene presentata la creazione di un HttpServer e un'istanza di App tramite il framework Actix-Web.
+In Actix-Web, ogni server è costruito attorno a un'istanza di App, che consente di configurare le "regole di routing" per risorse di vario tipo, registrare servizi HTTP e gestire stato di livello applicazione.
+\textbf{è presente lo state!!!!! cosa fare???}
+\\Nel caso specifico, vengono configurate due regole di routing:
 \begin{itemize}
-    \item Richieste eseguite alle \textbf{home} del sito: in questo caso verrà semplicemente restituita la pagine index.html presente nella directory static;
-    \item Richieste eseguite all'endpoint \textbf{\/upload}: quì sarà invece necessario ricevere un immagine e tutte le modifiche da apportare alla stessa all'interno del modulo WebAssmebly, per poi restituire il percorso della nuova immagine elaborata;
+    \item La prima regola gestisce le richieste dirette alla \textbf{home} del sito: in questo caso verrà semplicemente restituita la pagina index.html presente nella directory "static".
+    \item La seconda regola gestisce richieste all'endpoint \textbf{upload}, per le quali è necessario ricevere un'immagine e le relative modifiche da apportare all'interno del modulo WebAssembly. Successivamente, verrà restituito il percorso della nuova immagine elaborata.
 \end{itemize}
-Si noti che entrambe le regole di routing mappano le richieste a funzioni presenti all'interno del file \textbf{handlers.rs} nel modulo server.
-\\Successivamente sono stati registrati due servizi HTTP. Entrambi vengono utilizzati per garantire l'accesso a risorse statiche: script Javascript e immagini elaborate dall'applicazione.
-\\Infine, dopo aver stabilito il metodo di dispatching delle richieste ed aver messo a disposizione le risorse necessarie ai clienti si è passati alla scrittura del codice del file \textbf{handlers.rs}. Tale file, come suggerito dal nome, contiene gli handler delle richieste HTTP, con la conseguente esecuzione di codice WebAssmebly per richieste di modifica di immagini.
+Si sottolinea che entrambe le regole di routing mappano le richieste a funzioni presenti all'interno del file \textbf{handlers.rs} nel modulo server.
+\\Successivamente sono stati registrati due servizi HTTP  per garantire l'accesso a risorse statiche: script Javascript e immagini elaborate dall'applicazione.
+\\Infine, dopo aver configurato il metodo di dispatching delle richieste ed aver messo a disposizione le risorse necessarie ai client, si è passati alla scrittura del codice nel file \textbf{handlers.rs}. Tale file, come suggerito dal nome, contiene gli handler delle richieste HTTP, con la conseguente esecuzione di codice WebAssmebly per richieste di modifica di immagini.
 
-\begin{lstlisting}[language=Rust,caption={Operazioni principali presenti nel file main.rs}, showstringspaces=false]
+\begin{lstlisting}[language=Rust,caption={Operazioni principali presenti nel file handlers.rs}, showstringspaces=false]
     #[derive(MultipartForm)]
     pub struct ImageUpload {
         image: TempFile,
@@ -103,19 +105,20 @@ Si noti che entrambe le regole di routing mappano le richieste a funzioni presen
         }
     }
 \end{lstlisting}
-Dal listato precedente si possono facilmente notare due endpoint: il primo per richieste alla pagina home e il secondo per richieste di upload.
-\\Per quanto riguarda la prima tipologia si risponde ai client semplicemente con un file HTML statico.
-\\Al contrario la gestione delle richieste di upload è notevolmente più complessa e per questo motivo si è deciso di utilizzare una funzione di supporto \textbf{edit()} che si occuperà dell'istanziazione del modulo WASI e della sua esecuzione.
-\\Si noti anche che la funzione "upload" riceve come parametro un MultipartForm.
-Il framework Actix-Web, (ed in particolare il crate actix-multipart) facilita molto la gestione di richieste provenienti da form, anche contenenti campi di tipo "file".
-Ad ognuno dei campi della struct "ImageUpload", corrisponde un parametro proveniente dalla richiesta HTML. Tali campi verranno popolati prima dell'invocazione dell'handler, rendendo possibile l'accesso immediato ai valori inviati al server.
-\\Riassumendo la funzione \textbf{upload()} rende persistente il file temporaneo ricevuto ed inoltre crea un ulteriore \emph{struct} di supporto (\textbf{Editings}) che verrà sfruttata dalla funzione \textbf{edit()} per velocizzare le successive elaborazioni.
-\\Si fa presente che "edit()" verrà invocata se e solo se il file è stato reso persistente senza errori, in quanto tale funzione si occuperà dell'istanziazione del modulo WebAssmebly e non avrebbe senso tentare di eseguire modifiche su un file non correttamente salvato.
+Nel codice di handlers.rs si possono facilmente notare i due endpoint del prototipo: il primo per richieste alla pagina home e il secondo per richieste di upload.
+\\Per quanto riguarda la prima tipologia si risponde ai client semplicemente fornendo il file HTML statico "index.html".
+\\Al contrario la gestione delle richieste di upload è notevolmente più articolata e per questo motivo coinvolge una funzione di supporto denominata \textbf{edit()}. Sarà questa funzione che si occuperà dell'istanziazione del modulo WebAssmebly/WASI e della sua esecuzione.
+\\Si sottolinea anche il parametro ricevuto dalla funzione "upload" un \textbf{MultipartForm}.
+Il framework Actix-Web, con il supporto del crate actix-multipart semplifica notevolmente la gestione di richieste provenienti da form html, anche se questi contengono campi di tipo "file".
+Ogni campo definito nella struttura "ImageUpload" corrisponde a un parametro proveniente dalla richiesta HTML. Questi campi vengono automaticamente popolati prima dell'invocazione dell'handler, consentendo un accesso immediato ai valori inviati al server.
+\\In sintesi la funzione \textbf{upload()} rende persistente il file temporaneo ricevuto ed inoltre crea un ulteriore \emph{struct} di supporto (\textbf{Editings}) che verrà sfruttata dalla funzione \textbf{edit()} per velocizzare il successivo accesso alle elaborazioni da effettuare.
+\\Va sottolineato che "edit()" viene invocata solo se il file è stato reso persistente senza errori. Infatti, tale funzione si occupa dell'istanziazione del modulo WebAssembly e non ha senso tentare di eseguire modifiche su un file che non è stato salvato correttamente.
 \subsection{Integrazione modulo Wasm/WASI}
-Come già sottolineato, per l'esecuzione di codice WebAssmebly, si è deciso di utilizzare il runtime environment \textbf{Wasmtime}. La sua integrazione all'interno di un'applicazione Rust è resa possibile primariamente grazie ai crate \textbf{wasmtime}, \textbf{wasmtime-wasi} e \textbf{wasi-common}.
+Come precedentemente indicato, per l'esecuzione di codice WebAssmebly, si è deciso di utilizzare il runtime environment \textbf{Wasmtime}.
+La sua integrazione all'interno di un'applicazione Rust è resa possibile primariamente grazie ai crate \textbf{wasmtime}, \textbf{wasmtime-wasi} e \textbf{wasi-common}.
 \subsubsection{Scambio di dati}
 Prima ancora di iniziare l'implementazione è stato necessario trovare un modo per scambiare dati tra il modulo WebAssmebly e l'host.
-\\Per soddisfare i requesti imposti in questa tesi, è necessario che il modulo WebAssmebly riceva tutte le elaborazioni da effettuare su un'immagine e il nome del file da modificare, ma come introdotto in sezione \ref{subsub:Valori} una funzione WebAssmebly può accettare solamente valori di tipo numerico.
+\\Per soddisfare i requesti imposti in questa tesi, è necessario che il modulo WebAssmebly riceva tutte le elaborazioni da effettuare su un'immagine e il nome del file da modificare, ma come introdotto in sezione \ref{subsub:Valori}, una funzione WebAssmebly può ricevere solamente valori di tipo numerico.
 \\Grazie alle API WebAssmebly e WASI sono possibili diverse soluzioni a questo problema, come ad esempio l'utilizzo della memoria lineare, la scrittura su file, la modifica di variabili d'ambiente o la comunicazione tramite standard input.
 Alcuni degli approcci presentati risulterebbero però complicati da implementare e dato che per la nostra applicazione sarebbe sufficiente scambiare una stringa per ottenere tutte le informazioni necessarie, si è optato per la comunicazione via \textbf{standard input}.
 \\In particolare, per ottenere una comunicazione efficace tra host e guest, verrà implementato un protocollo composto dalla seguente sequenza di operazioni:
@@ -125,7 +128,6 @@ Alcuni degli approcci presentati risulterebbero però complicati da implementare
     \item Lettura della stringa dallo standard input del modulo  grazie alle API messe a disposizione da WebAssmebly System Interface;
     \item Deserializzazione in una Struct Editing equivalente a quella di partenza;
 \end{itemize}
-\newpage
 \subsubsection{Condizioni necessarie per l'esecuzione}
 Prima di poter eseguire un modulo tramite Wasmtime, sono necessarie diverse operazioni preliminari.
 \\Dopo aver serializzato la struttura dati e predisposto una \textbf{ReadPipe} (crate wasi-common) per la messa a disposizione dei dati serializzati su standard input, la prima operazione necessaria è la creazione dell'\textbf{Engine} Wasmtime.
@@ -209,10 +211,10 @@ fn main() {
     img.save(editings.modified_filepath);
 }
 \end{lstlisting}
-Terminata la scrittura del codice, è necessario compilarlo per ottenere un modulo WebAssmebly. Ciò si può fare agovelmente grazie a \textbf{cargo}:
+Terminata la scrittura del codice, è necessario compilarlo per ottenere un modulo WebAssmebly utilizzabile da wasmtime. Ciò si può fare agovelmente grazie a \textbf{cargo}:
 \begin{lstlisting}[language=Bash, numbers=none]
 cargo build --release --target wasm32-wasi
-        Compiling image_proc_module v0.1.0 (.\esempio_wasi)
+        Compiling image_proc_module v0.1.0 (.\image_proc_module)
             Finished release [optimized] target(s) in 1.21s
 \end{lstlisting}
 In questo particolare caso risulta molto importante la presenza del flag \textbf{- - release}, in quanto diverse funzioni del crate image, sono estremamente lente in debug mode.
