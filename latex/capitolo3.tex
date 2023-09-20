@@ -222,6 +222,93 @@ In questo particolare caso risulta molto importante la presenza del flag \textbf
 
 \newpage
 \section{Implementazione in Node.js}
+Dopo aver terminato l'implementazione del prototipo utilizzando Rust e WebAssmebly, si ha proceduto con l'implementazione di un applicazione avente le stesse funzionalità, questa volta scritta in Node.js.
+\\La seconda implementazione è risultata decisamente più immediata.
+In particolare è stato possibile utilizzare il client sviluppato in precedenza e non è stato necessario uno studio approfondito per l'integrazione di un modulo WebAssmebly.
+Come verrà sottolineato in seguito, ciò ha permesso di ottenere un codice decisamente più pulito e di una lunghezza commisurata alla semplicità dell'applicazione sviluppata.
+\\La ricerca è stata quindi limitata alla scelta di un moduli adeguati per la creazione di un'applicazione web che supportasse l'upload e l'elaborazione di immagini.
+La scelta è ricaduta sul web framework \textbf{express.js}, in combinazione con il middleware \textbf{multer} e con la libreria \textbf{Jimp}.
+\subsection{Express.js}
+Express.js è un web framework che semplifica lo sviluppo di applicazioni web robuste e scalabili. Esso è stato riconosciuto come lo standard de facto in quest'ambito.
+\\Express ha un design relativamente minimale, che però è in grado di offrire una vasta molteplicità di funzionalità grazie all'utilizzo di plugin e di middleware (come ad esempio Multer).  
+\\Il framework inoltre rende più semplice il routing, gestendo richieste e risposte HTTP in modo semplice ed immediato.
+\\Per quanto concerne la nostra applicazione, dopo aver importato i moduli richiesti, è necessaria una breve configurazione per far sì che siano gestite le richieste necessarie e per configurare l'upload di file.
+In particolare viene creata un'applicazione Express tramite l'omonimo metodo "express()".
+\\Successivamente tramite i metodi "express.use(express.static(...))" vengono messe a disposizione dei client le directory "static"(contenente il file HTML della home e relativi script) e "img/modified" (necessaria per poter scaricare immagini elaborate dal server).
+Il server viene poi messo in ascolto sulla porta 3000 e configurato in modo da gestire richieste di tipo POST dirette all'endpoint "/upload".
+\newpage
+\begin{lstlisting}[language=JavaScript, caption={Configurazione Express.js}, showstringspaces=false]
+const express = require('express');
+const app = express()
+const port = 3000
+    
+app.use(express.static('./static'))
+app.use(express.static('./img/modified'))
+
+app.post('/upload', upload.single('image'), (req, res) => {
+  try{
+  ...
+  }
+  } catch (error){
+    console.log(error);
+    res.status(500).send('Error processing the file');
+  }
+})
+
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}`)
+})
+\end{lstlisting}
+A questo punto per la corretta gestione dell'upload di immagini risulta necessario configurare l'applicazione per la ricezione di richieste con Content-Type = "multipart/form-data".
+\subsection{Multer}
+Come già specificato, per fare ciò è stata utilizzato il middleware "multer".
+Dopo aver importato tale modulo, è necessario impostare, tramite il metodo "multer.diskStorage()", la destinazione (per coerenza viene mantenuta la directory img/uploaded) e il nome del file appena caricato (viene utilizzato lo stesso nome del file fornito dall'utente).
+In seguito grazie al metodo "multer()" otteniamo un'istanza, ttramite la quale sarà possibile specificare nei parametri della callback function per richieste all'endpoint upload, che un singolo file dovrà essere reso persistente, come precedentemente specificato nella variabile storage. 
+\newpage
+\begin{lstlisting}[language=Javascript, caption={Configurazione upload immagine}, showstringspaces=false]
+const multer  = require('multer');
+const storage = multer.diskStorage({
+    destination: 'img/uploaded/',
+    filename: (req, file, cb) => {
+    cb(null, file.originalname);
+    }
+});
+const upload = multer({ storage });
+app.post('/upload', upload.single('image'), (req, res) => {
+    ...
+})
+\end{lstlisting}
+\subsection{Jimp}
+Terminata questa breve configurazione del server è possibile procedere con la modifica del file ricevuto. Tale file verrà aperto grazie al metodo \textbf{Jimp.read()} che renderà disponibile un istanza dell'immagine facilmente utilizzabile per eseguire le modifiche specificate. 
+Quest'ultime si possono ottenere grazie all'oggetto req.body, passato alla callback function "app.post('/upload',...)".
+\\Dopo aver modificato l'immagine, essa verrà salvata nella cartella "img/modified" con un nuovo nome per garantire univocità tra i file.
+\\Infine se tutte le operazioni precdenti saranno terminate correttamente, verrà restituito all'utente il percorso dell'immagine modificata. In caso contrario verrà invece restituito un messaggio di errore.
+\begin{lstlisting}[language=Javascript,caption={Elaborazione immagine grazie ai metodi di Jimp}, showstringspaces=false]
+    try{
+    const uploadededFilePath =                               'img/uploaded/' + req.file.originalname
+    const newFileName =  Date.now() + req.file.originalname 
+    const modifiedFilePath = 'img/modified/' + newFileName;
+
+    Jimp.read(uploadededFilePath, (err, img) => {
+      if (err) throw err
+      else{
+        img.scale(req.body.scala)
+           .rotate(req.body.ruota)
+           .mirror(req.body.specchia,false)
+           .contrast(req.body.contrasto/100)
+           .brightness(req.body.luminosita/100, function(){
+              if(req.body.bw) img.grayscale()
+              img.write(modifiedFilePath, function(){
+                res.status(200).send(newFileName);
+              });
+          });
+      }
+    });
+
+  } catch (error){
+    res.status(500).send('Error processing the file');
+  }
+\end{lstlisting}
 
 \section{Valutazione delle prestazioni}
 \section{Qualità del codice e manutenibilità}
@@ -232,5 +319,5 @@ In questo particolare caso risulta molto importante la presenza del flag \textbf
 
 
 
-\begin{lstlisting}[language=rust, showstringspaces=false]
+\begin{lstlisting}[language=Javascript, showstringspaces=false]
 \end{lstlisting}
