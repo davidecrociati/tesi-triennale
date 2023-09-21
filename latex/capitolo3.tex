@@ -39,7 +39,9 @@ Tali operazioni sono state selezionate poiché rappresentano funzionalità frequ
 Per quanto riguarda l'implementazione si è deciso di partire dal prototipo sviluppato in Rust poiché rappresentava l'aspetto più innovativo e richiedeva un considerevole impegno in termini di tempo.
 \\Si è resa inoltre necessaria la ricerca di un framework che consentisse la creazione di un web server per la gestione delle richieste utente.
 \\La scelta è ricaduta su actix-web, un web framework potente ed estremamente veloce per Rust.
-\\Il client è costituito una semplice pagina html contenente un form per il caricamento delle immagini e due riquadri che mostrano l'immagine pre e post modifiche. Tale pagina eseguirà una richiesta AJAX al server, inviando il file da elaborare e le relative specifiche sulle modifiche. Successivamente il server restituirà il percorso della nuova immagine elaborata pronta per essere scaricata.
+\\Il client è costituito una semplice pagina HTML contenente un form per il caricamento delle immagini e due riquadri che mostrano l'immagine pre e post modifiche.
+Tale pagina eseguirà una richiesta AJAX al server, inviando il file da elaborare e le relative specifiche sulle modifiche.
+\\Terminata l'elaborazione il server restituirà il percorso della nuova immagine pronta per essere scaricata.
 \begin{figure}
     \begin{center}
             \includegraphics[width=1\columnwidth]{images/client.png}
@@ -48,12 +50,13 @@ Per quanto riguarda l'implementazione si è deciso di partire dal prototipo svil
     \label{fig:client}
 \end{figure}
 \subsection{Actix-Web}
-Lo studio del funzionamento di base del framework Actix-Web ha costituito un punto focale nella fase inziale dell'implementazione.
+Lo studio del funzionamento del framework Actix-Web ha costituito un punto focale durante la fase inziale dell'implementazione.
 \\Tale framework si è dimostrato estremamente flessibile ed adatto per lo sviluppo del prototipo in questione.
 Grazie all'impiego di \textbf{extractors}, di \textbf{handlers} e di altre funzionalità integrate, la gestione di richieste HTTP è risultata intuitiva e diretta.
-\\La decisione di strutturare l'applicazione utilizzando diversi file è stata presa al fine di garantire un codice più ordinato e manutenibile.
-Tra tutti i file, il principale è \textbf{main.rs}, che svolge un ruolo centrale nell'architettura complessiva.
+\\Al fine di garantire un codice più ordinato e manutenibile è stata presa la decisione di strutturare l'applicazione in diversi file.
+Tra questi, il file primario è \textbf{main.rs}, che svolge un ruolo centrale nell'architettura complessiva.
 \subsubsection{Configurazione server}
+
 \begin{lstlisting}[language=rust, label=lst:RustWasi, caption={Porzione del file main.rs}, showstringspaces=false]
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
@@ -133,8 +136,8 @@ Il framework Actix-Web, con il supporto del crate actix-multipart semplifica not
 Come precedentemente indicato, per l'esecuzione di codice WebAssmebly, si è deciso di utilizzare il runtime environment \textbf{Wasmtime}.
 La sua integrazione all'interno di un'applicazione Rust è resa possibile primariamente grazie ai crate \textbf{wasmtime}, \textbf{wasmtime-wasi} e \textbf{wasi-common}.
 \subsubsection{Scambio di dati}
-Prima ancora di iniziare l'implementazione è stato fondamentale trovare un modo per scambiare dati tra il modulo WebAssmebly e l'host.
-\\Per soddisfare i requesti imposti in questa tesi, è necessario che il modulo WebAssmebly riceva tutte le elaborazioni da effettuare su un'immagine e il nome del file da modificare, ma come introdotto in sezione \ref{subsub:Valori}, una funzione WebAssmebly può ricevere solamente valori di tipo numerico.
+Prima ancora di iniziare l'implementazione è stato fondamentale trovare un modo per \textbf{scambiare dati} tra il modulo WebAssmebly e l'host.
+\\Per soddisfare i requesti imposti in questa tesi, è necessario che il modulo WebAssmebly riceva tutte le elaborazioni da effettuare su un'immagine e il nome del file da modificare, ma come introdotto in sezione \ref{subsub:Valori}, una funzione WebAssmebly può ricevere solamente valori di \textbf{tipo numerico}.
 \\Analizzando le API WebAssmebly e WASI sono emerse diverse soluzioni a questo problema. Tra queste l'utilizzo della memoria lineare, la scrittura su file, la modifica di variabili d'ambiente o la comunicazione attraverso standard input.
 Tuttavia, alcuni di questi approcci potrebbero risultare complessi da implementare e considerando che per l'applicazione sviluppata sarebbe stato sufficiente scambiare una stringa per ottenere tutte le informazioni necessarie, si è scelto di adottare la comunicazione tramite \textbf{standard input}.
 \\Nello specifico, per consentire lo scambio di dati tra host e guest, verrà implementato un protocollo composto dalla seguente sequenza di operazioni:
@@ -144,7 +147,7 @@ Tuttavia, alcuni di questi approcci potrebbero risultare complessi da implementa
     \item Lettura della stringa da standard input all'interno del modulo, sfruttando le API messe a disposizione da WebAssmebly System Interface;
     \item Deserializzazione in una Struct Editing equivalente a quella di partenza;
 \end{itemize}
-Si noti che, se necessario, questo protocollo potrebbe essere applicato anche per ottenere strutture dati in output dal modulo WebAssembly
+Si noti che, se necessario, questo protocollo potrebbe essere applicato anche per ottenere strutture dati in output dal modulo WebAssembly.
 \subsubsection{Condizioni necessarie per l'esecuzione}
 Prima di poter eseguire un modulo tramite Wasmtime, sono necessarie diverse operazioni preliminari.
 \\Dopo aver serializzato la struttura dati e predisposto una \textbf{ReadPipe} (crate wasi-common) per mettere a disposizione la stringa serializzata su standard input, la prima operazione necessaria è la creazione dell'\textbf{Engine} Wasmtime.
@@ -179,7 +182,7 @@ A questo punto è possibile creare e configurare un contesto WASI tramite la str
     
     let mut store = Store::new(&engine, wasi);
 \end{lstlisting}
-Ora risulta possibile la creazione del \textbf{Module} WebAssmebly e il suo collegamento con il Linker per poi ottenere, tramite quest'ultimo, un'\textbf{istanza} relativa al Module e allo Store precedentemente definiti.
+Ora risulta possibile la creazione del \textbf{Module} WebAssmebly e il suo collegamento con il Linker per poi ottenere, tramite quest'ultimo, un'\textbf{istanza} relativa al Module e allo Store specificati nel metodo \emph{linker.instantiate()}.
 \begin{lstlisting}[language=rust,caption={File handlers.rs: istanziazione modulo Wasm}, showstringspaces=false]
     let module = Module::from_file(&engine, "src/server/image_proc_module.wasm");
     linker.module(&mut store, "", &module) 
@@ -188,7 +191,7 @@ Ora risulta possibile la creazione del \textbf{Module} WebAssmebly e il suo coll
 \subsubsection{Esecuzione del modulo WebAssmebly}
 Avendo configurato Store e contesto WASI, il programma possiede già tutti gli argomenti necessari per il corretto funzionamento e l'unico passo rimanente consiste nell'effettiva esecuzione della funzione del modulo WebAssmebly.
 \\Per fare ciò è  necessario ottenere un'istanza di \textbf{wasmtime::Func} tramite l'operazione \emph{get\_typed\_func()} sull'istanza WebAssmebly.
-A questo punto l'esecuzione è finalmente possibile grazie al metodo \emph{Func::call()}.
+A questo punto l'invocazione della funzione richiesta è finalmente possibile grazie al metodo \emph{Func::call()}.
 \\Ad esecuzione terminata verrà eliminato lo store dalla memoria e restituito il percorso dell'immagine modificata al cliente.
 \begin{lstlisting}[language=rust,caption={File handlers.rs: invocazione funzione \_start presente nel modulo Wasm}, showstringspaces=false]
     let instance_main = instance.get_typed_func::<(), ()>(&mut store, "_start");
@@ -246,49 +249,46 @@ In questo caso risulta pressochè obbligatoria la presenza del flag \textbf{- - 
 
 \newpage
 \section{Implementazione in Node.js}
-Dopo aver terminato l'implementazione del prototipo utilizzando Rust e WebAssmebly, si ha proceduto con l'implementazione di un applicazione avente le stesse funzionalità, questa volta scritta in Node.js.
+Dopo aver terminato l'implementazione del prototipo utilizzando Rust e WebAssmebly, si ha proceduto con l'implementazione di un applicazione avente le stesse funzionalità, questa volta utilizzando il runtime environment \textbf{Node.js}.
 \\La seconda implementazione è risultata decisamente più immediata.
 In particolare è stato possibile utilizzare il client sviluppato in precedenza e non è stato necessario uno studio approfondito per l'integrazione di un modulo WebAssmebly.
-Come verrà sottolineato in seguito, ciò ha permesso di ottenere un codice decisamente più pulito e di una lunghezza commisurata alla semplicità dell'applicazione sviluppata.
-\\La ricerca è stata quindi limitata alla scelta di un moduli adeguati per la creazione di un'applicazione web che supportasse l'upload e l'elaborazione di immagini.
+Come verrà sottolineato in seguito, ciò ha permesso di ottenere un \textbf{codice} decisamente più \textbf{pulito} e di una lunghezza commisurata alla semplicità dell'applicazione sviluppata.
+\\La ricerca è stata quindi limitata alla selezione di un moduli adeguati per la creazione di un'applicazione web, che supportasse l'upload e l'elaborazione di immagini.
 La scelta è ricaduta sul web framework \textbf{express.js}, in combinazione con il middleware \textbf{multer} e con la libreria \textbf{Jimp}.
 \subsection{Express.js}
-Express.js è un web framework che semplifica lo sviluppo di applicazioni web robuste e scalabili. Esso è stato riconosciuto come lo standard de facto in quest'ambito.
-\\Express ha un design relativamente minimale, che però è in grado di offrire una vasta molteplicità di funzionalità grazie all'utilizzo di plugin e di middleware (come ad esempio Multer).  
-\\Il framework inoltre rende più semplice il routing, gestendo richieste e risposte HTTP in modo semplice ed immediato.
+Express.js è un \textbf{web framework} che semplifica lo sviluppo di applicazioni web robuste e scalabili. Esso è stato riconosciuto come lo \textbf{standard de facto} in quest'ambito.
+\\Express ha un design relativamente minimale, che però è in grado di offrire una vasta molteplicità di funzionalità grazie all'utilizzo di \textbf{plugin} e di middleware (come ad esempio Multer).  
+\\Il framework inoltre rende più semplice il routing, gestendo richieste e risposte HTTP in modo semplice e diretto.
 \\Per quanto concerne la nostra applicazione, dopo aver importato i moduli richiesti, è necessaria una breve configurazione per far sì che siano gestite le richieste necessarie e per configurare l'upload di file.
-In particolare viene creata un'applicazione Express tramite l'omonimo metodo "express()".
-\\Successivamente tramite i metodi "express.use(express.static(...))" vengono messe a disposizione dei client le directory "static"(contenente il file HTML della home e relativi script) e "img/modified" (necessaria per poter scaricare immagini elaborate dal server).
-Il server viene poi messo in ascolto sulla porta 3000 e configurato in modo da gestire richieste di tipo POST dirette all'endpoint "/upload".
-\newpage
 \begin{lstlisting}[language=JavaScript, caption={Configurazione Express.js}, showstringspaces=false]
-const express = require('express');
-const app = express()
-const port = 3000
+    const express = require('express');
+    const app = express()
+    const port = 3000
+        
+    app.use(express.static('./static'))
+    app.use(express.static('./img/modified'))
     
-app.use(express.static('./static'))
-app.use(express.static('./img/modified'))
-
-app.post('/upload', upload.single('image'), (req, res) => {
-  try{
-  ...
-  }
-  } catch (error){
-    console.log(error);
-    res.status(500).send('Error processing the file');
-  }
-})
-
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`)
-})
+    app.post('/upload', upload.single('image'), (req, res) => {
+      try{
+      ...
+      }
+      } catch (error){
+        console.log(error);
+        res.status(500).send('Error processing the file');
+      }
+    })
+    
+    app.listen(port, () => {
+      console.log(`Server listening on port ${port}`)
+    })
 \end{lstlisting}
-A questo punto per la corretta gestione dell'upload di immagini risulta necessario configurare l'applicazione per la ricezione di richieste con Content-Type = "multipart/form-data".
+Nello specifico viene creata un'applicazione Express tramite l'omonimo metodo \emph{express()}.
+\\Successivamente tramite i metodi \emph{express.use(express.static(...))} vengono messe a disposizione dei client le directory "static"(contenente il file HTML della home e relativi script) e "img/modified" (necessaria per poter scaricare immagini elaborate dal server).
+\\Il server viene poi messo in ascolto sulla porta 3000 e configurato in modo da gestire richieste di tipo POST dirette all'endpoint "/upload".
+\\A questo punto per la corretta gestione del caricamento di immagini risulta necessario configurare l'applicazione per la ricezione di richieste con Content-Type = "multipart/form-data".
 \subsection{Multer}
-Come già specificato, per fare ciò è stata utilizzato il middleware "multer".
-Dopo aver importato tale modulo, è necessario impostare, tramite il metodo "multer.diskStorage()", la destinazione (per coerenza viene mantenuta la directory img/uploaded) e il nome del file appena caricato (viene utilizzato lo stesso nome del file fornito dall'utente).
-In seguito grazie al metodo "multer()" otteniamo un'istanza, ttramite la quale sarà possibile specificare nei parametri della callback function per richieste all'endpoint upload, che un singolo file dovrà essere reso persistente, come precedentemente specificato nella variabile storage. 
-\newpage
+Come introdotto inizialmente, per la gestione di richieste provenienti da un form contenente campi di input di tipo file, è stato utilizzato il middleware \textbf{multer}.
+
 \begin{lstlisting}[language=Javascript, caption={Configurazione upload immagine}, showstringspaces=false]
 const multer  = require('multer');
 const storage = multer.diskStorage({
@@ -302,11 +302,10 @@ app.post('/upload', upload.single('image'), (req, res) => {
     ...
 })
 \end{lstlisting}
+Dopo aver importato tale modulo, è necessario impostare, tramite il metodo \emph{multer.diskStorage()}, la destinazione (per coerenza viene mantenuta la directory img/uploaded) e il nome del file appena caricato (viene utilizzato lo stesso nome del file fornito dall'utente).
+\\In seguito grazie al metodo \emph{multer()} otteniamo un'istanza, tramite la quale sarà possibile specificare nei parametri della callback function per richieste all'endpoint upload, che un singolo file dovrà essere reso persistente, come precedentemente specificato nella variabile storage. 
 \subsection{Jimp}
-Terminata questa breve configurazione del server è possibile procedere con la modifica del file ricevuto. Tale file verrà aperto grazie al metodo \textbf{Jimp.read()} che renderà disponibile un istanza dell'immagine facilmente utilizzabile per eseguire le modifiche specificate. 
-Quest'ultime si possono ottenere grazie all'oggetto req.body, passato alla callback function "app.post('/upload',...)".
-\\Dopo aver modificato l'immagine, essa verrà salvata nella cartella "img/modified" con un nuovo nome per garantire univocità tra i file.
-\\Infine se tutte le operazioni precdenti saranno terminate correttamente, verrà restituito all'utente il percorso dell'immagine modificata. In caso contrario verrà invece restituito un messaggio di errore.
+Terminata la configurazione del server tramite express.js è possibile procedere con la modifica del file ricevuto. 
 \begin{lstlisting}[language=Javascript,caption={Elaborazione immagine grazie ai metodi di Jimp}, showstringspaces=false]
     try{
     const uploadededFilePath =                               'img/uploaded/' + req.file.originalname
@@ -333,6 +332,11 @@ Quest'ultime si possono ottenere grazie all'oggetto req.body, passato alla callb
     res.status(500).send('Error processing the file');
   }
 \end{lstlisting}
+Il file è aperto grazie al metodo \textbf{Jimp.read()} che rende disponibile un istanza dell'immagine facilmente utilizzabile per eseguire le modifiche specificate. 
+Quest'ultime si possono ottenere grazie all'oggetto req.body, passato alla callback function \emph{app.post('/upload',...)}.
+\\Dopo aver modificato l'immagine, essa verrà salvata nella cartella "img/modified" con un nuovo nome per garantire univocità tra i file.
+\\Infine se tutte le operazioni precdenti saranno terminate correttamente, verrà restituito all'utente il percorso dell'immagine modificata. In caso contrario verrà invece restituito un messaggio di errore.
+
 
 \section{Valutazione delle prestazioni}
 \section{Qualità del codice e manutenibilità}
