@@ -19,6 +19,18 @@ Successivamente, per garantire uniformità nelle opzioni di modifica disponibili
     \item modifica della luminosità;
 \end{itemize}
 Tali operazioni sono state selezionate poiché rappresentano funzionalità frequentemente utilizzate anche da utenti comuni, oltre a caratterizzarsi per la loro eterogeneità. Alcune di queste coinvolgono esclusivamente la manipolazione dei pixel, come ad esempio la rotazione e il ribaltamento, mentre altre, come la conversione in scala di grigi o la modifica del contrasto/luminosità, comportano modifiche dirette ai pixel stessi.
+\begin{figure}
+    \centering
+    \begin{minipage}{.5\textwidth}
+      \centering
+      \includegraphics[width=.7\linewidth]{images/pre.jpeg}
+    \end{minipage}%
+    \begin{minipage}{.5\textwidth}
+      \centering
+      \includegraphics[width=1\linewidth]{images/post.jpg}
+    \end{minipage}
+    \caption{Esempio di immagine a cui sono state apportate tutte le elaborazioni specificate.}
+\end{figure}
 \newpage
 \section{Setup sperimentale}
 \section{Metodologia}
@@ -41,6 +53,7 @@ Lo studio del funzionamento di base del framework Actix-Web ha costituito un pun
 Grazie all'impiego di \textbf{extractors}, di \textbf{handlers} e di altre funzionalità integrate, la gestione di richieste HTTP è risultata intuitiva e diretta.
 \\La decisione di strutturare l'applicazione utilizzando diversi file è stata presa al fine di garantire un codice più ordinato e manutenibile.
 Tra tutti i file, il principale è \textbf{main.rs}, che svolge un ruolo centrale nell'architettura complessiva.
+\subsubsection{Configurazione server}
 \begin{lstlisting}[language=rust, label=lst:RustWasi, caption={Porzione del file main.rs}, showstringspaces=false]
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
@@ -70,71 +83,75 @@ Si sottolinea che entrambe le regole di routing mappano le richieste a funzioni 
 \\Infine, dopo aver configurato il metodo di dispatching delle richieste ed aver messo a disposizione le risorse necessarie ai client, si è passati alla scrittura del codice nel file \textbf{handlers.rs}. Tale file, come suggerito dal nome, contiene gli handler delle richieste HTTP, con la conseguente esecuzione di codice WebAssmebly per richieste di modifica di immagini.
 
 \begin{lstlisting}[language=Rust,caption={Operazioni principali presenti nel file handlers.rs}, showstringspaces=false]
-    #[derive(MultipartForm)]
-    pub struct ImageUpload {
-        image: TempFile,
-        scala: Text<f32>,
-        contrasto: Text<f32>,
-        luminosita: Text<i32>,
-        ruota: Text<bool>,
-        specchia: Text<bool>,
-        bw: Text<bool>
-    }
-    #[derive(Serialize, Deserialize)]
-    pub struct Editings{
-        scala: f32,
-        ...
-    }
-    pub async fn index() -> HttpResponse {
-        HttpResponse::Ok().content_type("text/html")
-            .body(include_str!("../static/index.html"))
-    }
-    let new_file_name = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
-    let filepath = format!("img/uploaded/{:?}_{}",new_file_name, form.0.file_name.as_str());
+#[derive(MultipartForm)]
+pub struct ImageUpload {
+    image: TempFile,
+    scala: Text<f32>,
+    contrasto: Text<f32>,
+    luminosita: Text<i32>,
+    ruota: Text<bool>,
+    specchia: Text<bool>,
+    bw: Text<bool>
+}
+#[derive(Serialize, Deserialize)]
+pub struct Editings{
+    scala: f32,
+    ...
+}
+pub async fn index() -> HttpResponse {
+    HttpResponse::Ok().content_type("text/html")
+        .body(include_str!("../static/index.html"))
+}
+
+pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
+    let time = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH);
+    let filepath = format!("img/uploaded/{:?}_{}", time, 
+        form.0.file_name.as_str());
     match form.0.image.file.persist(filepath) {
-            Ok(_) => {
-                let editings = Editings{
-                    scala : form.0.scala.0,
-                    ...
-                };
-                edit(editings)
-            },
-            Err(e) => {
-                HttpResponse::InternalServerError().finish()
-            },
-        }
+        Ok(_) => {
+            let editings = Editings{
+                scala : form.0.scala.0,
+                ...
+            };
+            edit(editings)
+        },
+        Err(e) => {
+            HttpResponse::InternalServerError().finish()
+        },
     }
+}
 \end{lstlisting}
-Nel codice di handlers.rs si possono facilmente notare i due endpoint del prototipo: il primo per richieste alla pagina home e il secondo per richieste di upload.
+Nel codice quì presentato, si possono facilmente notare i due endpoint del prototipo: la funzione \textbf{index()} per richieste alla pagina home e la funzione \textbf{upload()} per richieste di elaborazione di immagini.
 \\Per quanto riguarda la prima tipologia si risponde ai client semplicemente fornendo il file HTML statico "index.html".
 \\Al contrario la gestione delle richieste di upload è notevolmente più articolata e per questo motivo coinvolge una funzione di supporto denominata \textbf{edit()}. Sarà questa funzione che si occuperà dell'istanziazione del modulo WebAssmebly/WASI e della sua esecuzione.
-\\Si sottolinea anche il parametro ricevuto dalla funzione "upload" un \textbf{MultipartForm}.
-Il framework Actix-Web, con il supporto del crate actix-multipart semplifica notevolmente la gestione di richieste provenienti da form html, anche se questi contengono campi di tipo "file".
-Ogni campo definito nella struttura "ImageUpload" corrisponde a un parametro proveniente dalla richiesta HTML. Questi campi vengono automaticamente popolati prima dell'invocazione dell'handler, consentendo un accesso immediato ai valori inviati al server.
+\\Si sottolinea anche il parametro ricevuto dalla funzione "upload": un \textbf{MultipartForm<ImageUpload>}.
+Il framework Actix-Web, con il supporto del crate actix-multipart semplifica notevolmente la gestione di richieste provenienti da form html, anche in presenza di campi di input di tipo "file".
+\\Ogni campo definito nella struttura "ImageUpload" corrisponde a un parametro proveniente dalla richiesta HTML e viene automaticamente popolato prima dell'invocazione dell'handler, consentendo un accesso immediato ai valori inviati al server.
 \\In sintesi la funzione \textbf{upload()} rende persistente il file temporaneo ricevuto ed inoltre crea un ulteriore \emph{struct} di supporto (\textbf{Editings}) che verrà sfruttata dalla funzione \textbf{edit()} per velocizzare il successivo accesso alle elaborazioni da effettuare.
 \\Va sottolineato che "edit()" viene invocata solo se il file è stato reso persistente senza errori. Infatti, tale funzione si occupa dell'istanziazione del modulo WebAssembly e non ha senso tentare di eseguire modifiche su un file che non è stato salvato correttamente.
 \subsection{Integrazione modulo Wasm/WASI}
 Come precedentemente indicato, per l'esecuzione di codice WebAssmebly, si è deciso di utilizzare il runtime environment \textbf{Wasmtime}.
 La sua integrazione all'interno di un'applicazione Rust è resa possibile primariamente grazie ai crate \textbf{wasmtime}, \textbf{wasmtime-wasi} e \textbf{wasi-common}.
 \subsubsection{Scambio di dati}
-Prima ancora di iniziare l'implementazione è stato necessario trovare un modo per scambiare dati tra il modulo WebAssmebly e l'host.
+Prima ancora di iniziare l'implementazione è stato fondamentale trovare un modo per scambiare dati tra il modulo WebAssmebly e l'host.
 \\Per soddisfare i requesti imposti in questa tesi, è necessario che il modulo WebAssmebly riceva tutte le elaborazioni da effettuare su un'immagine e il nome del file da modificare, ma come introdotto in sezione \ref{subsub:Valori}, una funzione WebAssmebly può ricevere solamente valori di tipo numerico.
-\\Grazie alle API WebAssmebly e WASI sono possibili diverse soluzioni a questo problema, come ad esempio l'utilizzo della memoria lineare, la scrittura su file, la modifica di variabili d'ambiente o la comunicazione tramite standard input.
-Alcuni degli approcci presentati risulterebbero però complicati da implementare e dato che per la nostra applicazione sarebbe sufficiente scambiare una stringa per ottenere tutte le informazioni necessarie, si è optato per la comunicazione via \textbf{standard input}.
-\\In particolare, per ottenere una comunicazione efficace tra host e guest, verrà implementato un protocollo composto dalla seguente sequenza di operazioni:
+\\Analizzando le API WebAssmebly e WASI sono emerse diverse soluzioni a questo problema. Tra queste l'utilizzo della memoria lineare, la scrittura su file, la modifica di variabili d'ambiente o la comunicazione attraverso standard input.
+Tuttavia, alcuni di questi approcci potrebbero risultare complessi da implementare e considerando che per l'applicazione sviluppata sarebbe stato sufficiente scambiare una stringa per ottenere tutte le informazioni necessarie, si è scelto di adottare la comunicazione tramite \textbf{standard input}.
+\\Nello specifico, per consentire lo scambio di dati tra host e guest, verrà implementato un protocollo composto dalla seguente sequenza di operazioni:
 \begin{itemize}
     \item Serializzazione in formato JSON della struct "Editing" contenente tutte le elaborazioni  e il nome del file da modificare;
-    \item Messa a disposizione sullo standard input del modulo Wasm della stringa ottenuta dalla serializzazione;
-    \item Lettura della stringa dallo standard input del modulo  grazie alle API messe a disposizione da WebAssmebly System Interface;
+    \item Inserimento sullo standard input del modulo Wasm, della stringa ottenuta dalla serializzazione;
+    \item Lettura della stringa da standard input all'interno del modulo, sfruttando le API messe a disposizione da WebAssmebly System Interface;
     \item Deserializzazione in una Struct Editing equivalente a quella di partenza;
 \end{itemize}
+Si noti che, se necessario, questo protocollo potrebbe essere applicato anche per ottenere strutture dati in output dal modulo WebAssembly
 \subsubsection{Condizioni necessarie per l'esecuzione}
 Prima di poter eseguire un modulo tramite Wasmtime, sono necessarie diverse operazioni preliminari.
-\\Dopo aver serializzato la struttura dati e predisposto una \textbf{ReadPipe} (crate wasi-common) per la messa a disposizione dei dati serializzati su standard input, la prima operazione necessaria è la creazione dell'\textbf{Engine} Wasmtime.
-Esso rappresenta un contesto globale per la compilazione e l'esecuzione di moduli Wasm, che nel nostro specifico caso adotterà la configurazione di default.
+\\Dopo aver serializzato la struttura dati e predisposto una \textbf{ReadPipe} (crate wasi-common) per mettere a disposizione la stringa serializzata su standard input, la prima operazione necessaria è la creazione dell'\textbf{Engine} Wasmtime.
+\\Esso rappresenta un contesto globale per la compilazione e l'esecuzione di moduli Wasm, che nel nostro specifico caso adotterà la configurazione di default.
 \\Si procederà poi con l'istanziazione di un \textbf{wasmtime::Linker}. Il linker faciliterà l'istanziazione del modulo Wasm, risolvendo le diverse import (tra cui quelle per le syscall WASI).
-\\Non bisogna poi dimenticare che a causa dell'architettura di WASI, sarà possibile accedere ai file presenti in una directory, se e solo se il programma avrà la capability necessarie per farlo. 
-Per ottenere le capability per operare sulle immagini caricate dagli utenti, è necessario aprire la cartella "img" prima dell'istanziazione del modulo WASI.
+\\Non bisogna poi dimenticare, che a causa dell'architettura di WASI, sarà possibile accedere ed utilizzare i file presenti in una certa directory, solamente se al programma sono state fornite le \textbf{capabilities} necessarie. 
+\\Per ottenere le capabilities per operare sulle immagini caricate dagli utenti, è necessario aprire la cartella "img" prima dell'istanziazione del modulo WASI.
 
 \begin{lstlisting}[language=rust, caption={File handlers.rs: operazioni preliminari}, showstringspaces=false]
 pub fn edit(editing : Editings) -> HttpResponse {
@@ -146,11 +163,12 @@ pub fn edit(editing : Editings) -> HttpResponse {
     let mut linker: Linker<WasiCtx> = Linker::new(&engine);
     wasmtime_wasi::add_to_linker(&mut linker, |s| s); 
     let  image_directory = Dir::open_ambient_dir("img", ambient_authority());
+    ...
 }
 \end{lstlisting}
 A questo punto è possibile creare e configurare un contesto WASI tramite la struct \textbf{wasmtime\_wasi::WasiCtxBuilder}.
-In particolare specifichiamo che lo standard input sarà prelevato dall'oggetto contenente la serializzazione, lo standard output e lo standard error saranno ereditati dalla macchina host ed infine verrà fornita una directory precedentemente aperta, che sarà disponibile al percorso "img".
-\\Sfruttando il contesto WASI è ora possibile la creazione dello \textbf{Store} Wasmtime, l'oggetto designato per l'effettiva istanziazione del modulo WebAssembly. Quest'ultimo conterrà inoltre tutte le funzioni, la memoria, le tabelle e lo stato del programma.
+\\Tramite tale oggetto si specifica che lo standard input sarà prelevato dall'oggetto contenente la serializzazione, lo standard output e lo standard error saranno ereditati dalla macchina host ed infine si fornisce una directory precedentemente aperta, che sarà disponibile al percorso "img".
+\\Sfruttando il contesto WASI è ora possibile la creazione dello \textbf{Store} Wasmtime, l'oggetto designato per l'effettiva istanziazione del modulo WebAssembly e che successivamente conterrà tutte le funzioni, la memoria, le tabelle e lo stato interno del programma.
 \begin{lstlisting}[language=rust,caption={File handlers.rs: creazione di contesto WASI e Store}, showstringspaces=false]
     let builder = WasiCtxBuilder::new()
     .stdin(Box::new(stdin.clone()))
@@ -161,18 +179,18 @@ In particolare specifichiamo che lo standard input sarà prelevato dall'oggetto 
     
     let mut store = Store::new(&engine, wasi);
 \end{lstlisting}
-Ora risulta inoltre possibile la creazione del \textbf{Module} WebAssmebly e il suo collegamento con il Linker, per poi finire con l'ottenimento dell'\textbf{istanza} tramite lo Store e il Module precedentemente creati.
+Ora risulta possibile la creazione del \textbf{Module} WebAssmebly e il suo collegamento con il Linker per poi ottenere, tramite quest'ultimo, un'\textbf{istanza} relativa al Module e allo Store precedentemente definiti.
 \begin{lstlisting}[language=rust,caption={File handlers.rs: istanziazione modulo Wasm}, showstringspaces=false]
     let module = Module::from_file(&engine, "src/server/image_proc_module.wasm");
     linker.module(&mut store, "", &module) 
     let instance = linker.instantiate(&mut store, &module);
 \end{lstlisting}
 \subsubsection{Esecuzione del modulo WebAssmebly}
-L'unica operazione rimanente è l'effettiva esecuzione della funzione del modulo WebAssmebly.
-Infatti avendo configurato nel modo presentato sopra Store e contesto WASI, il programma possiede già tutti gli argomenti necessari per il corretto funzionamento.
-\\Prima di poter eseguire una funzione è però necessario ottenere un'istanza di \textbf{wasmtime::Func} tramite l'operazione \emph{get\_typed\_func()} sull'istanza WebAssmebly.
-A questo punto l'esecuzione è finalmente possibile grazie al metodo \emph{Func::call()}. Ad esecuzione terminata verrà eliminato lo store dalla memoria e restituito il percorso dell'immagine modificata al cliente.
-\begin{lstlisting}[language=rust,caption={File handlers.rs: chiamata a funzione interna al modulo Wasm}, showstringspaces=false]
+Avendo configurato Store e contesto WASI, il programma possiede già tutti gli argomenti necessari per il corretto funzionamento e l'unico passo rimanente consiste nell'effettiva esecuzione della funzione del modulo WebAssmebly.
+\\Per fare ciò è  necessario ottenere un'istanza di \textbf{wasmtime::Func} tramite l'operazione \emph{get\_typed\_func()} sull'istanza WebAssmebly.
+A questo punto l'esecuzione è finalmente possibile grazie al metodo \emph{Func::call()}.
+\\Ad esecuzione terminata verrà eliminato lo store dalla memoria e restituito il percorso dell'immagine modificata al cliente.
+\begin{lstlisting}[language=rust,caption={File handlers.rs: invocazione funzione \_start presente nel modulo Wasm}, showstringspaces=false]
     let instance_main = instance.get_typed_func::<(), ()>(&mut store, "_start");
     instance_main.call(&mut store, ());
     drop(store);
@@ -180,17 +198,13 @@ A questo punto l'esecuzione è finalmente possibile grazie al metodo \emph{Func:
     .content_type("text/plain")
     .body(e.modified_file_path)
 \end{lstlisting}
-Si noti che in questi esempi di codice non è presente alcuna gestione degli errori. Tuttavia nel prototipo sviluppato, l'utente finale otterrà il nuovo percorso del file, se e solo se ognuna delle operazioni illustrate sarà andata a buon fine.
+Si noti che in questi esempi di codice non è presente alcuna gestione degli errori. Tuttavia nel prototipo sviluppato, l'utente finale otterrà il nuovo percorso del file, solo nel caso in cui ciascuna delle operazioni illustrate sarà andata a buon fine.
 \subsection{Modulo WebAssmebly/WASI}
 Il modulo WebAssmebly risulta a questo punto piuttosto semplice.
 \\Esso si occupa infatti della lettura dei parametri da \textbf{standard input} e della loro deserializzazione in una struct Editings.
-\\Successivamente vengono utilizzati i metodi forniti dal crate \textbf{image} di Rust per aprire l'immagine, modificarla secondo le specifiche ricevute dall'host e salvarla nel percorso specificato.\cite{rust:image}
-\\A questo punto il controllo ritornerà all'host che si occuperà dell'invio di una risposta adeguata al client:
-\begin{itemize}
-    \item Se durante l'esecuzione tutte le operazioni sono terminate correttamente verrà restituito il percorso della nuova immagine generata;
-    \item In caso di errore verrà restituito un errore;
-\end{itemize}
-\begin{lstlisting}[language=rust, showstringspaces=false]
+\\Successivamente vengono utilizzati i metodi forniti dal crate \textbf{image} di Rust per aprire l'immagine ricevuta, modificarla secondo le specifiche dell'utente e salvarla nel percorso specificato.\cite{rust:image}
+
+\begin{lstlisting}[language=rust, caption={Codice Rust che successivamente verrà compilato in WebAssembly}, showstringspaces=false]
 #[derive(Serialize, Deserialize)]
 pub struct Editings{
     scala: f32,
@@ -201,24 +215,32 @@ fn main() {
     std::io::stdin().read_to_string(&mut serialized_params);
     let editings : Editings = serde_json::from_str(&serialized_params);
     let mut img = image::open(editings.filepath)
+    if editings.scala != 0.0 {
+        let new_width = (img.width() as f32) * editings.scala;
+        let new_heigth = (img.height() as f32) * editings.scala;
+        img = img.resize(new_width as u32, new_heigth as u32, image::imageops::FilterType::Nearest);
+    }
     if editings.ruota {
         img = img.rotate90();
-    }
-    if editings.specchia {
-        img = img.fliph();
     }
     ...
     img.save(editings.modified_filepath);
 }
 \end{lstlisting}
-Terminata la scrittura del codice, è necessario compilarlo per ottenere un modulo WebAssmebly utilizzabile da wasmtime. Ciò si può fare agovelmente grazie a \textbf{cargo}:
+Terminata l'esecuzione del modulo, il controllo ritornerà all'host che si occuperà dell'invio di una risposta adeguata al client:
+\begin{itemize}
+    \item Se durante l'esecuzione del modulo Wasm tutte le operazioni sono terminate correttamente verrà restituito il percorso della nuova immagine generata;
+    \item Altrimenti verrà restituito un messaggio di errore;
+\end{itemize}
+Terminata la scrittura del codice, è necessaria la compilazione per ottenere un modulo WebAssmebly utilizzabile da wasmtime.
+\\Ciò si può fare agovelmente grazie al package manager \textbf{cargo}, ed in particolare grazie al seguente comando:
 \begin{lstlisting}[language=Bash, numbers=none]
 cargo build --release --target wasm32-wasi
         Compiling image_proc_module v0.1.0 (.\image_proc_module)
             Finished release [optimized] target(s) in 1.21s
 \end{lstlisting}
-In questo particolare caso risulta molto importante la presenza del flag \textbf{- - release}, in quanto diverse funzioni del crate image, sono estremamente lente in debug mode.
-\\Si noti anche che, in quanto abbiamo svolto tutte le operazioni necessarie nel main, nel momento in cui l'host invocherà il metodo \emph{get\_typed\_func()}, sarà necessario specificare la funzione chiamata \textbf{\_start}.
+In questo caso risulta pressochè obbligatoria la presenza del flag \textbf{- - release}, in quanto diverse funzioni del crate image, sono estremamente lente se utilizzate in debug mode.
+\\Infine si sottolinea che avendo svolto tutte le operazioni necessarie nel main, nel momento in cui l'host invocherà il metodo \emph{get\_typed\_func()}, sarà necessario specificare la funzione denominata \textbf{\_start}.
 
 
 
