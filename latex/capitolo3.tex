@@ -29,7 +29,7 @@ Tali operazioni sono state selezionate poiché rappresentano funzionalità frequ
       \centering
       \includegraphics[width=1\linewidth]{images/post.jpg}
     \end{minipage}
-    \caption{Esempio di immagine a cui sono state apportate tutte le elaborazioni specificate.}
+    \caption[Esempio immagine pre/post elaborazione]{Esempio di immagine a cui sono state apportate tutte le elaborazioni specificate.}
 \end{figure}
 \newpage
 \section{Setup sperimentale}
@@ -249,17 +249,17 @@ In questo caso risulta pressochè obbligatoria la presenza del flag \textbf{- - 
 
 \newpage
 \section{Implementazione in Node.js}
-Dopo aver terminato l'implementazione del prototipo utilizzando Rust e WebAssmebly, si ha proceduto con l'implementazione di un applicazione avente le stesse funzionalità, questa volta utilizzando il runtime environment \textbf{Node.js}.
-\\La seconda implementazione è risultata decisamente più immediata.
-In particolare è stato possibile utilizzare il client sviluppato in precedenza e non è stato necessario uno studio approfondito per l'integrazione di un modulo WebAssmebly.
-Come verrà sottolineato in seguito, ciò ha permesso di ottenere un \textbf{codice} decisamente più \textbf{pulito} e di una lunghezza commisurata alla semplicità dell'applicazione sviluppata.
-\\La ricerca è stata quindi limitata alla selezione di un moduli adeguati per la creazione di un'applicazione web, che supportasse l'upload e l'elaborazione di immagini.
-La scelta è ricaduta sul web framework \textbf{express.js}, in combinazione con il middleware \textbf{multer} e con la libreria \textbf{Jimp}.
+Dopo aver terminato l'implementazione del prototipo mediante l'utilizzo di Rust e WebAssmebly, si è proceduto con l'implementazione di un applicazione dotata delle medesime funzionalità, questa volta utilizzando il runtime environment \textbf{Node.js}.
+\\La seconda implementazione è risultata notevolmente più immediata.
+In particolare è stato possibile riutilizzare il client sviluppato precedentemente, senza necessità di un'analisi approfondita per l'integrazione di un modulo WebAssmebly.
+Come verrà sottolineato in seguito, ciò ha permesso di ottenere un \textbf{codice} decisamente più \textbf{pulito} e di lunghezza proporzionata alla semplicità dell'applicazione sviluppata.
+\\La ricerca si è dunque focalizzata sulla selezione di un moduli adeguati per la creazione di un'applicazione web in grado di supportare l'upload e l'elaborazione di immagini.
+La scelta è ricaduta sul web framework \textbf{express.js}, in combinazione con il middleware \textbf{multer} e la libreria \textbf{Jimp}.
 \subsection{Express.js}
 Express.js è un \textbf{web framework} che semplifica lo sviluppo di applicazioni web robuste e scalabili. Esso è stato riconosciuto come lo \textbf{standard de facto} in quest'ambito.
-\\Express ha un design relativamente minimale, che però è in grado di offrire una vasta molteplicità di funzionalità grazie all'utilizzo di \textbf{plugin} e di middleware (come ad esempio Multer).  
+\\Il design di Express è relativamente minimale, tuttavia, grazie all'impiego di \textbf{plugin} e \textbf{middleware} come Multer, è in grado di fornire una vasta gamma di funzionalità.
 \\Il framework inoltre rende più semplice il routing, gestendo richieste e risposte HTTP in modo semplice e diretto.
-\\Per quanto concerne la nostra applicazione, dopo aver importato i moduli richiesti, è necessaria una breve configurazione per far sì che siano gestite le richieste necessarie e per configurare l'upload di file.
+\\Per quanto concerne la nostra applicazione, dopo aver importato i moduli richiesti, è essenziale effettuare una configurazione breve ma precisa, per la gestione delle richieste necessarie e per la configurazione dell'upload dei file.
 \begin{lstlisting}[language=JavaScript, caption={Configurazione Express.js}, showstringspaces=false]
     const express = require('express');
     const app = express()
@@ -283,12 +283,11 @@ Express.js è un \textbf{web framework} che semplifica lo sviluppo di applicazio
     })
 \end{lstlisting}
 Nello specifico viene creata un'applicazione Express tramite l'omonimo metodo \emph{express()}.
-\\Successivamente tramite i metodi \emph{express.use(express.static(...))} vengono messe a disposizione dei client le directory "static"(contenente il file HTML della home e relativi script) e "img/modified" (necessaria per poter scaricare immagini elaborate dal server).
-\\Il server viene poi messo in ascolto sulla porta 3000 e configurato in modo da gestire richieste di tipo POST dirette all'endpoint "/upload".
-\\A questo punto per la corretta gestione del caricamento di immagini risulta necessario configurare l'applicazione per la ricezione di richieste con Content-Type = "multipart/form-data".
+\\Successivamente tramite i metodi \emph{express.use(express.static(...))} vengono rese accessibili ai client le directory "static"(contenente il file HTML della home e gli script correlati) e "img/modified" (necessaria per il download delle immagini elaborate dal server).
+\\Il server viene poi messo in ascolto sulla porta 3000 e configurato per gestire richieste di tipo POST dirette all'endpoint "/upload".
+\\A questo punto, per la corretta gestione del caricamento di immagini, risulta necessario configurare l'applicazione affinché sia in grado di ricevere richieste con Content-Type "multipart/form-data".
 \subsection{Multer}
-Come introdotto inizialmente, per la gestione di richieste provenienti da un form contenente campi di input di tipo file, è stato utilizzato il middleware \textbf{multer}.
-
+Come introdotto inizialmente, per la gestione di richieste provenienti da un form contenente campi di input di tipo file, è stato adottato il middleware \textbf{multer}.
 \begin{lstlisting}[language=Javascript, caption={Configurazione upload immagine}, showstringspaces=false]
 const multer  = require('multer');
 const storage = multer.diskStorage({
@@ -302,12 +301,13 @@ app.post('/upload', upload.single('image'), (req, res) => {
     ...
 })
 \end{lstlisting}
-Dopo aver importato tale modulo, è necessario impostare, tramite il metodo \emph{multer.diskStorage()}, la destinazione (per coerenza viene mantenuta la directory img/uploaded) e il nome del file appena caricato (viene utilizzato lo stesso nome del file fornito dall'utente).
-\\In seguito grazie al metodo \emph{multer()} otteniamo un'istanza, tramite la quale sarà possibile specificare nei parametri della callback function per richieste all'endpoint upload, che un singolo file dovrà essere reso persistente, come precedentemente specificato nella variabile storage. 
+Una volta importato questo modulo, è necessario impostare, tramite il metodo \emph{multer.diskStorage()}, la destinazione (per coerenza viene mantenuta la directory img/uploaded) e il nome del file appena caricato (viene utilizzato lo stesso nome del file fornito dall'utente).
+\\In seguito attraveso l'utilizzo del metodo \emph{multer()} otteniamo un'istanza, tramite la quale è possibile specificare, nei parametri della callback function per richieste all'endpoint upload, che un singolo file dovrà essere reso persistente, come precedentemente specificato nella variabile storage.
 \subsection{Jimp}
-Terminata la configurazione del server tramite express.js è possibile procedere con la modifica del file ricevuto. 
-\begin{lstlisting}[language=Javascript,caption={Elaborazione immagine grazie ai metodi di Jimp}, showstringspaces=false]
-    try{
+Una volta terminata la configurazione del server tramite express.js, è possibile procedere con la modifica del file ricevuto. 
+\begin{lstlisting}[language=Javascript,caption={Elaborazione immagine grazie ai metodi della libreria Jimp}, showstringspaces=false]
+app.post('/upload', upload.single('image'), (req, res) => {
+  try{
     const uploadededFilePath =                               'img/uploaded/' + req.file.originalname
     const newFileName =  Date.now() + req.file.originalname 
     const modifiedFilePath = 'img/modified/' + newFileName;
@@ -331,13 +331,13 @@ Terminata la configurazione del server tramite express.js è possibile procedere
   } catch (error){
     res.status(500).send('Error processing the file');
   }
+}
 \end{lstlisting}
-Il file è aperto grazie al metodo \textbf{Jimp.read()} che rende disponibile un istanza dell'immagine facilmente utilizzabile per eseguire le modifiche specificate. 
-Quest'ultime si possono ottenere grazie all'oggetto req.body, passato alla callback function \emph{app.post('/upload',...)}.
-\\Dopo aver modificato l'immagine, essa verrà salvata nella cartella "img/modified" con un nuovo nome per garantire univocità tra i file.
-\\Infine se tutte le operazioni precdenti saranno terminate correttamente, verrà restituito all'utente il percorso dell'immagine modificata. In caso contrario verrà invece restituito un messaggio di errore.
-
-
+Il file è aperto mediante l'impego del metodo \textbf{Jimp.read()}, il quale fornisce un'istanza utilizzabile per moodificare l'immagine secondo specifiche.
+Quest'ultime si possono essere acquisite  tramite l'oggetto req.body, passato alla callback function \emph{app.post('/upload',...)}.
+\\Dopo aver apportato le opportune modifiche all'immagine, essa viene salvata nella cartella "img/modified" con un nuovo nome al fine di garantire univocità tra i vari file.
+\\Infine, se tutte le operazioni precedenti vengono eseguite correttamente, verrà restituito all'utente il percorso dell'immagine modificata. In caso contrario, verrà restituito un messaggio di errore.
+\newpage
 \section{Valutazione delle prestazioni}
 \section{Qualità del codice e manutenibilità}
 \section{Esperienza di sviluppo}
