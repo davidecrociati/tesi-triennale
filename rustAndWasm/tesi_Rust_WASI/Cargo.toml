@@ -3,14 +3,13 @@ name = "tesi_Rust_WASI"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [profile.dev]
 opt-level = 3
 
 [dependencies]
-actix-web = "4"
-actix-rt = "2.8"
+actix-web = "4.4.0"
+actix-rt = "2.9"
 actix-multipart = "0.6"
 actix-files = "0.6"
 futures-util = "0.3"
@@ -24,4 +23,4 @@ wasmtime = "11.0.0"
 wasmtime-wasi = "11.0.0"
 wasi-common = "11.0.0"
 anyhow = "1.0.75"
-serde_json = "1.0.105"
+serde_json = "1.0"
