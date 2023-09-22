@@ -1,5 +1,5 @@
 [package]
-name = "tesi_Rust_WASI"
+name = "tesi_rust_wasi"
 version = "0.1.0"
 edition = "2021"
 

@@ -3,6 +3,7 @@ use std::time::SystemTime;
 use actix_web::HttpResponse;
 use actix_multipart::form::{MultipartForm, tempfile::TempFile,text::Text};
 
+use anyhow::Error;
 use wasmtime::{Engine, Linker, Module, Store};
 use wasmtime_wasi::{sync::Dir, WasiCtxBuilder, ambient_authority};
 use wasi_common::{pipe::ReadPipe, WasiCtx};
@@ -57,16 +58,24 @@ pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
                 file_path : format!("img/uploaded/{:?}_{}",new_file_name, form.0.file_name.as_str()),
                 modified_file_path : format!("img/modified/{:?}_{}",SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap(), form.0.file_name.as_str())
             };
-            edit(editings)
+            match edit(editings){
+                Ok(response) =>{
+                    response
+                },
+                Err(e) => {
+                    eprintln!("Error: {}", e.to_string());
+                    HttpResponse::InternalServerError().finish()
+                },
+            }
         },
         Err(e) => {
-            println!("Error: {}", e.to_string());
+            eprintln!("Error: {}", e.to_string());
             HttpResponse::InternalServerError().finish()
         },
     }
 }
 
-pub fn edit(e : Editings) -> HttpResponse {
+pub fn edit(e : Editings) -> Result<HttpResponse, Error> {
     let serialized_input = serde_json::to_string(&e).expect("Error serializing editings");
     println!("input for wasi module: {}", serialized_input);
     let stdin = ReadPipe::from(serialized_input);
@@ -98,8 +107,8 @@ pub fn edit(e : Editings) -> HttpResponse {
     println!("\n\n");
     drop(store);
     
-    HttpResponse::Ok()
+    Ok(HttpResponse::Ok()
     .content_type("text/plain")
-    .body(e.modified_file_path)
+    .body(e.modified_file_path))
         
 }

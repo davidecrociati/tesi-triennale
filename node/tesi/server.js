@@ -6,7 +6,7 @@ const port = 3000
 const storage = multer.diskStorage({
   destination: 'img/uploaded/',
   filename: (req, file, cb) => {
-    cb(null, file.originalname);
+    cb(null, Date.now() + file.originalname);
   }
 });
 const upload = multer({ storage });
@@ -26,9 +26,9 @@ app.use(express.static('./img/modified'))
 
 app.post('/upload', upload.single('image'), (req, res) => {
   try{
-    const uploadededFilePath = 'img/uploaded/' + req.file.originalname
-    const newFileName =  Date.now() + req.file.originalname 
-    const modifiedFilePath = 'img/modified/' + newFileName;
+    const uploadededFilePath = 'img/uploaded/' + req.file.filename;
+    const modifiedFilePath = 'img/modified/' + req.file.filename;
+    
     let editings = {
       scala: Number(req.body.scala),
       contrasto: Number(req.body.contrasto),
@@ -38,11 +38,12 @@ app.post('/upload', upload.single('image'), (req, res) => {
       bw: Boolean(req.body.bw)
     };
     console.log(editings)
+
     elapsed_time("new request");
     Jimp.read(uploadededFilePath, (err, img) => {
       if (err) throw err
       else{
-        elapsed_time("elapsed time for reading file:  " + uploadededFilePath);
+        elapsed_time("time for reading file:  " + uploadededFilePath);
         img.scale(editings.scala)
            .rotate(editings.ruota)
            .mirror(editings.specchia,false)
@@ -54,7 +55,7 @@ app.post('/upload', upload.single('image'), (req, res) => {
               elapsed_time("time for editing file:  " + modifiedFilePath);
               img.write(modifiedFilePath, function(){
                 elapsed_time("time for writing file:  " + modifiedFilePath);
-                res.status(200).send(newFileName);
+                res.status(200).send(req.file.filename);
               });
           });
       }
