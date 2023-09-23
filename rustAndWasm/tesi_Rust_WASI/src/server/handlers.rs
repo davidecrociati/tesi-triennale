@@ -1,4 +1,4 @@
-use std::time::SystemTime;
+use std::time::{SystemTime, Instant};
 
 use actix_web::HttpResponse;
 use actix_multipart::form::{MultipartForm, tempfile::TempFile,text::Text};
@@ -9,6 +9,13 @@ use wasmtime_wasi::{sync::Dir, WasiCtxBuilder, ambient_authority};
 use wasi_common::{pipe::ReadPipe, WasiCtx};
 
 use serde::{Serialize,Deserialize};
+
+use peak_alloc::PeakAlloc;
+use cpu_time::ThreadTime;
+
+
+#[global_allocator]
+static PEAK_ALLOC: PeakAlloc = PeakAlloc;
 
 #[derive(MultipartForm)]
 pub struct ImageUpload {
@@ -41,6 +48,10 @@ pub async fn index() -> HttpResponse {
 
 
 pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
+    let t = ThreadTime::now();
+    let now = Instant::now();
+    PEAK_ALLOC.reset_peak_usage();
+
     let new_file_name = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
     let filepath = format!("img/uploaded/{:?}_{}",new_file_name, form.0.file_name.as_str());
     println!("Tryng to upload: {:?}...", form.0.file_name.as_str());
@@ -60,6 +71,13 @@ pub async fn upload(form: MultipartForm<ImageUpload>) -> HttpResponse {
             };
             match edit(editings){
                 Ok(response) =>{
+                    let d = t.elapsed();
+                    let du = now.elapsed();
+                    let cpu_percentage = (d.as_micros() as f32) / (du.as_micros() as f32) * 100.0;
+                    let peak_mem = PEAK_ALLOC.peak_usage_as_mb();
+                    println!("Max memory consumption: {}", peak_mem);
+                    println!("CPU usage over total time: {:?}\n", cpu_percentage);
+                    
                     response
                 },
                 Err(e) => {

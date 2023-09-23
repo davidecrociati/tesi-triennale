@@ -11,13 +11,24 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+let _maxMemoryConsumption = 0;
+let _dtOfMaxMemoryConsumption;
+
+process.nextTick(() => {
+  let memUsage = process.memoryUsage();
+  if (memUsage.rss > _maxMemoryConsumption) {
+    _maxMemoryConsumption = memUsage.rss;
+    _dtOfMaxMemoryConsumption = new Date();
+  }
+});
+
 var start = process.hrtime();
 
 var elapsed_time = function(note){
     var precision = 3; // 3 decimal places
     var elapsed = process.hrtime(start)[1] / 1000000; // divide by a million to get nano to milli
     if(note != "new request")
-      console.log((process.hrtime(start)[0]*1000 + elapsed).toFixed(precision)+ " ms - " + note); // print message + time
+      return process.hrtime(start)[0]*1000 + elapsed; // print message + time
     start = process.hrtime(); // reset the timer
 }
 
@@ -25,6 +36,9 @@ app.use(express.static('./static'))
 app.use(express.static('./img/modified'))
 
 app.post('/upload', upload.single('image'), (req, res) => {
+  
+const startUsage = process.cpuUsage();
+elapsed_time("new request");
   try{
     const uploadededFilePath = 'img/uploaded/' + req.file.filename;
     const modifiedFilePath = 'img/modified/' + req.file.filename;
@@ -39,11 +53,10 @@ app.post('/upload', upload.single('image'), (req, res) => {
     };
     console.log(editings)
 
-    elapsed_time("new request");
     Jimp.read(uploadededFilePath, (err, img) => {
       if (err) throw err
       else{
-        elapsed_time("time for reading file:  " + uploadededFilePath);
+        //elapsed_time("time for reading file:  " + uploadededFilePath);
         img.scale(editings.scala)
            .rotate(editings.ruota)
            .mirror(editings.specchia,false)
@@ -52,9 +65,16 @@ app.post('/upload', upload.single('image'), (req, res) => {
               if(editings.bw)
                 img.grayscale()
 
-              elapsed_time("time for editing file:  " + modifiedFilePath);
+              //elapsed_time("time for editing file:  " + modifiedFilePath);
               img.write(modifiedFilePath, function(){
-                elapsed_time("time for writing file:  " + modifiedFilePath);
+
+                const endUsage = process.cpuUsage(startUsage);
+                totalTime = elapsed_time ("");
+                //console.log("time for processing file:  " + totalTime);
+                //console.log("CPU time:  " + (endUsage.system+endUsage.user)/1000);
+                console.log(`Max memory consumption: ${_maxMemoryConsumption/1000000} at ${_dtOfMaxMemoryConsumption}`);
+                console.log(`CPU usage over total time: ${(endUsage.system+endUsage.user)/1000 /totalTime*100} %`);
+
                 res.status(200).send(req.file.filename);
               });
           });
