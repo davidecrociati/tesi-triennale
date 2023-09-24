@@ -362,7 +362,98 @@ Per quanto riguarda i software utilizzati, si sono scelte le ultime versioni al 
     \item Node 18.17.1 (LTS)
 \end{itemize}
 Il seguente setup, pur non essendo propriamente tipico di un server ha comunque permesso di osservare differenze evidenti tra i due apprrocci esaminati.
+\newpage
 \section{Valutazione delle prestazioni}
+Per ottenere risultati affidabili e confrontabili sono state eseguite 10 misurazioni per ogni immagine.
+In seguito sono stato calcolati il valore medio del campione ottenuto come media aritmetica e la deviazione standard:
+\begin{equation*}
+    E[X]=\frac{1}{n}\sum_{i=0}^{n}x_i
+\end{equation*}
+\begin{equation*}
+    \sigma_X = \sqrt{\frac{1}{n}\sum_{i=0}^{n}(x_i-E[x])^2}
+\end{equation*}
+In ciascuno dei grafici che seguiranno saranno riportate le misurazioni per ognuna delle tre immagini utilizzate.
+\subsection{Latenza}
+\begin{figure}
+    \begin{center}
+            \includegraphics[width=1\columnwidth]{images/rust_latenza.png}
+    \end{center}
+    \caption{Latenza misurata utilizzando Rust in combinazione con WebAssembly.}
+\end{figure}
+\begin{figure}
+    \begin{center}
+            \includegraphics[width=1\columnwidth]{images/node_latenza.png}
+    \end{center}
+    \caption{Latenza misurata utilizzando Node.js}
+\end{figure}
+Per quanto riguarda Rust la latenza è:
+\begin{align*}
+    E[X]_{small}&=850ms,  & \sigma_X=154.94ms\\
+    E[X]_{medium}&=1487ms, & \sigma_X=144.99ms\\
+    E[X]_{large}&=4212ms,  & \sigma_X=169.95ms
+\end{align*}
+Per quanto riguarda Node.js, invece:
+\begin{align*}
+    E[X]_{small}&=704ms,  & \sigma_X=79.19ms\\
+    E[X]_{medium}&=3081ms, & \sigma_X=240.58ms\\
+    E[X]_{large}&=11335ms,  & \sigma_X=282.73ms
+\end{align*}
+Come si può facilmente notare...
+\subsection{Utilizzo CPU}
+blablbla
+\begin{figure}
+    \begin{center}
+            \includegraphics[width=1\columnwidth]{images/rust_cpu.png}
+    \end{center}
+    \caption{Utilizzo CPU misurato utilizzando Rust in combinazione con WebAssembly.}
+\end{figure}
+\begin{figure}
+    \begin{center}
+            \includegraphics[width=1\columnwidth]{images/node_cpu.png}
+    \end{center}
+    \caption{Utilizzo CPU misurato utilizzando Node.js}
+\end{figure}
+Per quanto riguarda Rust l'utilizzo di CPU è:
+\begin{align*}
+    E[X]_{small}&=16.09\%,  & \sigma_X=3.32\%\\
+    E[X]_{medium}&=55.35\%, & \sigma_X=3.64\%\\
+    E[X]_{large}&=82.44\%,  & \sigma_X=1.93\%
+\end{align*}
+Per quanto riguarda Node.js, invece:
+\begin{align*}
+    E[X]_{small}&=20.87\%,  & \sigma_X=6.89\%\\
+    E[X]_{medium}&=16.33\%, & \sigma_X=3.81\%\\
+    E[X]_{large}&=18.96\%,  & \sigma_X=2.67\%
+\end{align*}
+Come si può notare...
+\subsection{Consumo memoria}
+blablbla
+\begin{figure}
+    \begin{center}
+            \includegraphics[width=1\columnwidth]{images/rust_mem.png}
+    \end{center}
+    \caption{Consumo memoria misurato durante i test di Rust in combinazione con WebAssembly.}
+\end{figure}
+\begin{figure}
+    \begin{center}
+            \includegraphics[width=1\columnwidth]{images/node_mem.png}
+    \end{center}
+    \caption{Consumo memoria misurato utilizzando Node.js}
+\end{figure}
+Per quanto riguarda Rust il consumo di memoria è:
+\begin{align*}
+    E[X]_{small}&=50.24\text{MB},  & \sigma_X=4.91\text{MB}\\
+    E[X]_{medium}&=48.79.\text{MB},  & \sigma_X=1.02\text{MB}\\
+    E[X]_{large}&=47.51.\text{MB},  & \sigma_X=0.90\text{MB}\\
+\end{align*}
+Per quanto riguarda Node.js, invece:
+\begin{align*}
+    E[X]_{small}&=80.51\text{MB},  & \sigma_X=2.73\text{MB}\\
+    E[X]_{medium}&=79.80\text{MB},  & \sigma_X=1.16\text{MB}\\
+    E[X]_{large}&=79.92\text{MB},  & \sigma_X=1.55\text{MB}\\
+\end{align*}
+Come si può notare...
+\newpage
 \section{Qualità del codice e manutenibilità}
 \section{Esperienza di sviluppo}
 \section{Conclusioni}
