@@ -32,9 +32,6 @@ Tali operazioni sono state selezionate poiché rappresentano funzionalità frequ
     \caption[Esempio immagine pre/post elaborazione]{Esempio di immagine a cui sono state apportate tutte le elaborazioni specificate.}
 \end{figure}
 \newpage
-\section{Setup sperimentale}
-\section{Metodologia}
-\newpage
 \section{Implementazione in Rust e Wasm/WASI}
 Per quanto riguarda l'implementazione si è deciso di partire dal prototipo sviluppato in Rust poiché rappresentava l'aspetto più innovativo e richiedeva un considerevole impegno in termini di tempo.
 \\Si è resa inoltre necessaria la ricerca di un framework che consentisse la creazione di un web server per la gestione delle richieste utente.
@@ -338,14 +335,37 @@ Quest'ultime si possono essere acquisite  tramite l'oggetto req.body, passato al
 \\Dopo aver apportato le opportune modifiche all'immagine, essa viene salvata nella cartella "img/modified" con un nuovo nome al fine di garantire univocità tra i vari file.
 \\Infine, se tutte le operazioni precedenti vengono eseguite correttamente, verrà restituito all'utente il percorso dell'immagine modificata. In caso contrario, verrà restituito un messaggio di errore.
 \newpage
+\section{Metodologia di test}
+Per verificare le prestazioni di ciascuna implementazione presentata, si è deciso di eseguire lo stesso set di test per entrambe.
+In particolare è stata scelta una sola elaborazione e durante la sua esecuzione sono stati misurati diversi parametri.
+Per scegliere la tipologia di operazione si è empiricamente tentato di carpire quale fosse, tra le elaborazioni implementate, quella più computazionalmente complessa.
+Eseguendo vari test su una stessa immagine e verificando la latenza è stato scelto il \textbf{resize} di un'immagine.
+In seguito sono state scelte le immagini di test e i parametri da misurare.
+Per le immagini si è optato per tre file di dimensioni crescenti:
+\begin{itemize}
+    \item 1114 x 742 (0.82 Megapixel, 925 KiloByte);
+    \item 2869 x 1912 (5.48 Megapixel, 4.63 MegaByte);
+    \item 5578 x 3712 (20.7 Megapixel, 17.4 MegaByte);
+\end{itemize}
+Come parametri da misurare si ha optato per:
+\begin{itemize}
+    \item Latenza per ogni richiesta;
+    \item Utilizzo di CPU;
+    \item Consumo di memoria;
+\end{itemize}
+\section{Setup sperimentale}
+Per eseguire i test presentati è stato utilizzato un laptop con processore Intel Core i5-10210 (1.6-2.10 GHz), 8 GigaByte di Ram e sistema operativo Windows 11.
+Per quanto riguarda i software utilizzati, si sono scelte le ultime versioni al momento disponibili:
+\begin{itemize}
+    \item Rust 1.71
+    \item Wasmtime 11.0
+    \item Node 18.17.1 (LTS)
+\end{itemize}
+Il seguente setup, pur non essendo propriamente tipico di un server ha comunque permesso di osservare differenze evidenti tra i due apprrocci esaminati.
 \section{Valutazione delle prestazioni}
 \section{Qualità del codice e manutenibilità}
 \section{Esperienza di sviluppo}
-\section{Scalabilità e concorrenza}
 \section{Conclusioni}
 \section{Sviluppi futuri}
-
-
-
 \begin{lstlisting}[language=Javascript, showstringspaces=false]
 \end{lstlisting}
