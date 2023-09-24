@@ -72,9 +72,11 @@ elapsed_time("new request");
                 totalTime = elapsed_time ("");
                 //console.log("time for processing file:  " + totalTime);
                 //console.log("CPU time:  " + (endUsage.system+endUsage.user)/1000);
+                console.log("mem usage: %j",process.memoryUsage());
                 console.log(`Max memory consumption: ${_maxMemoryConsumption/1000000} at ${_dtOfMaxMemoryConsumption}`);
-                console.log(`CPU usage over total time: ${(endUsage.system+endUsage.user)/1000 /totalTime*100} %`);
+                console.log(`CPU usage over total time: ${((endUsage.system+endUsage.user)/1000) /totalTime*100} %`);
 
+                console.log(`CPU system usage:${endUsage.system/1000}, user usage:${endUsage.user/1000}, total time:${totalTime}`);
                 res.status(200).send(req.file.filename);
               });
           });
