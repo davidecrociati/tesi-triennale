@@ -180,6 +180,7 @@ A questo punto è possibile creare e configurare un contesto WASI tramite la str
     let mut store = Store::new(&engine, wasi);
 \end{lstlisting}
 Ora risulta possibile la creazione del \textbf{Module} WebAssmebly e il suo collegamento con il Linker per poi ottenere, tramite quest'ultimo, un'\textbf{istanza} relativa al Module e allo Store specificati nel metodo \emph{linker.instantiate()}.
+\newpage
 \begin{lstlisting}[language=rust,caption={File handlers.rs: istanziazione modulo Wasm}, showstringspaces=false]
     let module = Module::from_file(&engine, "src/server/image_proc_module.wasm");
     linker.module(&mut store, "", &module) 
@@ -199,6 +200,7 @@ A questo punto l'invocazione della funzione richiesta è finalmente possibile gr
     .body(e.modified_file_path)
 \end{lstlisting}
 Si noti che in questi esempi di codice non è presente alcuna gestione degli errori. Tuttavia nel prototipo sviluppato, l'utente finale otterrà il nuovo percorso del file, solo nel caso in cui ciascuna delle operazioni illustrate sarà andata a buon fine.
+\newpage
 \subsection{Modulo WebAssmebly/WASI}
 Il modulo WebAssmebly risulta a questo punto piuttosto semplice.
 \\Esso si occupa infatti della lettura dei parametri da \textbf{standard input} e della loro deserializzazione in una struct Editings.
@@ -337,24 +339,25 @@ Quest'ultime si possono essere acquisite  tramite l'oggetto req.body, passato al
 \newpage
 \section{Metodologia di test}
 Per verificare le prestazioni di ciascuna implementazione presentata, si è deciso di eseguire lo stesso set di test per entrambe.
-In particolare è stata scelta una sola elaborazione e durante la sua esecuzione sono stati misurati diversi parametri.
-Per scegliere la tipologia di operazione si è empiricamente tentato di carpire quale fosse, tra le elaborazioni implementate, quella più computazionalmente complessa.
+\\In particolare è stata scelta una sola elaborazione e durante la sua esecuzione sono stati misurati diversi parametri.
+\\Per scegliere la tipologia di operazione si è empiricamente tentato di carpire quale fosse, tra le elaborazioni implementate, quella più computazionalmente complessa.
 Eseguendo vari test su una stessa immagine e verificando la latenza è stato scelto il \textbf{resize} di un'immagine.
-In seguito sono state scelte le immagini di test e i parametri da misurare.
+Ed in particolare il ridimensionamento x0.9, coì da manipolare un alto numero di pixel ed ottenere un'immagine di dimensioni simili a quella di partenza. 
+\\In seguito sono state scelte le immagini di test e i parametri da misurare.
 Per le immagini si è optato per tre file di dimensioni crescenti:
 \begin{itemize}
     \item 1114 x 742 (0.82 Megapixel, 925 KiloByte);
     \item 2869 x 1912 (5.48 Megapixel, 4.63 MegaByte);
     \item 5578 x 3712 (20.7 Megapixel, 17.4 MegaByte);
 \end{itemize}
-Come parametri da misurare si ha optato per:
+Come parametri da misurare si è optato per:
 \begin{itemize}
     \item Latenza per ogni richiesta;
     \item Utilizzo di CPU;
     \item Consumo di memoria;
 \end{itemize}
 \section{Setup sperimentale}
-Per eseguire i test presentati è stato utilizzato un laptop con processore Intel Core i5-10210 (1.6-2.10 GHz), 8 GigaByte di Ram e sistema operativo Windows 11.
+Per eseguire i test presentati è stato utilizzato un laptop con processore Intel Core i5-10210 (1.6 - 2.10 GHz), 8 GigaByte di Ram e sistema operativo Windows 11.
 Per quanto riguarda i software utilizzati, si sono scelte le ultime versioni al momento disponibili:
 \begin{itemize}
     \item Rust 1.71
@@ -362,9 +365,8 @@ Per quanto riguarda i software utilizzati, si sono scelte le ultime versioni al 
     \item Node 18.17.1 (LTS)
 \end{itemize}
 Il seguente setup, pur non essendo propriamente tipico di un server ha comunque permesso di osservare differenze evidenti tra i due apprrocci esaminati.
-\newpage
 \section{Valutazione delle prestazioni}
-Per ottenere risultati affidabili e confrontabili sono state eseguite 10 misurazioni per ogni immagine.
+Per ottenere un campione di risultati affidabile sono state eseguite 10 misurazioni per ogni immagine.
 In seguito sono stato calcolati il valore medio del campione ottenuto come media aritmetica e la deviazione standard:
 \begin{equation*}
     E[X]=\frac{1}{n}\sum_{i=0}^{n}x_i
@@ -372,8 +374,23 @@ In seguito sono stato calcolati il valore medio del campione ottenuto come media
 \begin{equation*}
     \sigma_X = \sqrt{\frac{1}{n}\sum_{i=0}^{n}(x_i-E[x])^2}
 \end{equation*}
-In ciascuno dei grafici che seguiranno saranno riportate le misurazioni per ognuna delle tre immagini utilizzate.
+Successivamente verranno presentati i grafici per ciascuno dei parametri scelti, rispettivamente utilizzando Rust in combinazione con WebAssembly e Node.js. Ogni grafico conterrà i risultati per ognuna delle tre immagini utilizzati, consentendo così anche una facile analisi visiva.
+Inoltre verranno presentati anche i valori medi per ogni elaborazione e per ogni tipologia di immagine utlizzata (piccola, media, grande).
 \subsection{Latenza}
+Il primo parametro misurato è stato quello della latenza.
+Nello specifico si è analizzato il tempo intercorso tra l'invio di una richiesta di elaborazione e la successiva risposta contenente il percorso della nuova immagine elaborata.
+Per quanto riguarda Rust si sono ottenuti i seguenti risultati sperimentali:
+\begin{align*}
+    E[X]_{small}&=850ms,  & \sigma_X=154.94ms\\
+    E[X]_{medium}&=1487ms, & \sigma_X=144.99ms\\
+    E[X]_{large}&=4212ms,  & \sigma_X=169.95ms
+\end{align*}
+Relativemente a Node.js invece:
+\begin{align*}
+    E[X]_{small}&=704ms,  & \sigma_X=79.19ms\\
+    E[X]_{medium}&=3081ms, & \sigma_X=240.58ms\\
+    E[X]_{large}&=11335ms,  & \sigma_X=282.73ms
+\end{align*}
 \begin{figure}
     \begin{center}
             \includegraphics[width=1\columnwidth]{images/rust_latenza.png}
@@ -386,21 +403,22 @@ In ciascuno dei grafici che seguiranno saranno riportate le misurazioni per ognu
     \end{center}
     \caption{Latenza misurata utilizzando Node.js}
 \end{figure}
-Per quanto riguarda Rust la latenza è:
-\begin{align*}
-    E[X]_{small}&=850ms,  & \sigma_X=154.94ms\\
-    E[X]_{medium}&=1487ms, & \sigma_X=144.99ms\\
-    E[X]_{large}&=4212ms,  & \sigma_X=169.95ms
-\end{align*}
-Per quanto riguarda Node.js, invece:
-\begin{align*}
-    E[X]_{small}&=704ms,  & \sigma_X=79.19ms\\
-    E[X]_{medium}&=3081ms, & \sigma_X=240.58ms\\
-    E[X]_{large}&=11335ms,  & \sigma_X=282.73ms
-\end{align*}
-Come si può facilmente notare...
+Come si può notare il tempo di latenza è confrontabile durante l'elaborazione dell'immagine con dimensione minore. Con l'elaborazione delle rimanenti due immagini Rust ha performato notevolmente meglio, impiegando circa un terzo del tempo per l'elaborazione dell'immagine più grande rispetto a Node.js.
+Si può ipotizzare che durante la modifica di immagini piccole WebAssembly non riesca ad essere migliore anche e soprattutto per l'overhead introdotto dall'istanziazione di un modulo e dalle operazioni correlate. Quando però il numero di operazioni destinate alla CPU aumenta si nota sia la tanto nominata "velocità di esecuzione pari a quella del codice nativo" di WebAssembly che il \emph{bottleneck} dovuto a Node.js.
 \subsection{Utilizzo CPU}
-blablbla
+In seguito è stato misurato l'utilizzo di CPU di ciascuno dei due approcci presentati durante l'esecuzione di una richiesta, utilizzando le stesse immagini e le stesse impostazioni presentate in preecedenza.
+Anche in questo secondo test si è partiti da Rust e si sono ottenuti i seguenti risultati sperimentali:
+\begin{align*}
+    E[X]_{small}&=16.09\%,  & \sigma_X=3.32\%\\
+    E[X]_{medium}&=55.35\%, & \sigma_X=3.64\%\\
+    E[X]_{large}&=82.44\%,  & \sigma_X=1.93\%
+\end{align*}
+Relativemente a Node.js, invece:
+\begin{align*}
+    E[X]_{small}&=20.87\%,  & \sigma_X=6.89\%\\
+    E[X]_{medium}&=16.33\%, & \sigma_X=3.81\%\\
+    E[X]_{large}&=18.96\%,  & \sigma_X=2.67\%
+\end{align*}
 \begin{figure}
     \begin{center}
             \includegraphics[width=1\columnwidth]{images/rust_cpu.png}
@@ -413,21 +431,24 @@ blablbla
     \end{center}
     \caption{Utilizzo CPU misurato utilizzando Node.js}
 \end{figure}
-Per quanto riguarda Rust l'utilizzo di CPU è:
+Come si può notare, in questo secondo test sono stati ottenuti risultati sostanzialmente differenti.
+\\Nell'approccio basato su WebAssembly si può notare un utilizzo crescente della CPU al crescere della dimensione dell'immagine. Mentre utilizzando Node.js la CPU viene utilizzata pressochè allo stesso modo per tutte e tre le immagini analizzate.
+\\Ciò fa notare come Rust in combinazione con Wasm sia in grado di sfruttare in maniera massiccia la capacità computazionale della macchina quando le condizioni lo richiedano.
+\\Al contrario Node.js dimostra di non essere in grado di sfruttare la CPU al massimo delle potenzialità con conseguenti tempi di latenza maggiori, per richieste altamente CPU-intensive.
+\newpage\subsection{Consumo memoria}
+Come menzionato in precedenza, l'ultimo test eseguito riguardava il consumo di memoria durante l'esecuzione di una richiesta di elaborazione. 
+\\Per quanto riguarda Rust sono stati ottenuti i seguenti risultati relativi al consumo di memoria:
 \begin{align*}
-    E[X]_{small}&=16.09\%,  & \sigma_X=3.32\%\\
-    E[X]_{medium}&=55.35\%, & \sigma_X=3.64\%\\
-    E[X]_{large}&=82.44\%,  & \sigma_X=1.93\%
+    E[X]_{small}&=50.24\text{MB},  & \sigma_X=4.91\text{MB}\\
+    E[X]_{medium}&=48.79.\text{MB},  & \sigma_X=1.02\text{MB}\\
+    E[X]_{large}&=47.51.\text{MB},  & \sigma_X=0.90\text{MB}\\
 \end{align*}
 Per quanto riguarda Node.js, invece:
 \begin{align*}
-    E[X]_{small}&=20.87\%,  & \sigma_X=6.89\%\\
-    E[X]_{medium}&=16.33\%, & \sigma_X=3.81\%\\
-    E[X]_{large}&=18.96\%,  & \sigma_X=2.67\%
+    E[X]_{small}&=80.51\text{MB},  & \sigma_X=2.73\text{MB}\\
+    E[X]_{medium}&=79.80\text{MB},  & \sigma_X=1.16\text{MB}\\
+    E[X]_{large}&=79.92\text{MB},  & \sigma_X=1.55\text{MB}\\
 \end{align*}
-Come si può notare...
-\subsection{Consumo memoria}
-blablbla
 \begin{figure}
     \begin{center}
             \includegraphics[width=1\columnwidth]{images/rust_mem.png}
@@ -440,23 +461,7 @@ blablbla
     \end{center}
     \caption{Consumo memoria misurato utilizzando Node.js}
 \end{figure}
-Per quanto riguarda Rust il consumo di memoria è:
-\begin{align*}
-    E[X]_{small}&=50.24\text{MB},  & \sigma_X=4.91\text{MB}\\
-    E[X]_{medium}&=48.79.\text{MB},  & \sigma_X=1.02\text{MB}\\
-    E[X]_{large}&=47.51.\text{MB},  & \sigma_X=0.90\text{MB}\\
-\end{align*}
-Per quanto riguarda Node.js, invece:
-\begin{align*}
-    E[X]_{small}&=80.51\text{MB},  & \sigma_X=2.73\text{MB}\\
-    E[X]_{medium}&=79.80\text{MB},  & \sigma_X=1.16\text{MB}\\
-    E[X]_{large}&=79.92\text{MB},  & \sigma_X=1.55\text{MB}\\
-\end{align*}
-Come si può notare...
 \newpage
-\section{Qualità del codice e manutenibilità}
-\section{Esperienza di sviluppo}
+In quest'ultimo test i risultati dei test effettuati sono molto simili per entrambi gli approcci. Node.js consuma leggermente più memoria ma in entrambi i casi, tale consumo viene mantenuto pressochè costante per tutte le tipologie di immagine.
+\newpage
 \section{Conclusioni}
-\section{Sviluppi futuri}
-\begin{lstlisting}[language=Javascript, showstringspaces=false]
-\end{lstlisting}
