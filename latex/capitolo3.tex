@@ -1,4 +1,4 @@
-\chapter{Prototipo sviluppato}
+\chapter{Prototipo per esecuzione efficiente di codice Wasm con tecniche di Image Processing}
 \label{chap:3}
 Nel capitolo precedente sono state esaminate le differenze sostanziali tra un'approccio basato su Rust in combinazione con WebAssmebly e uno basato su Node.js.
 In questo capitolo si presenterà il prototipo sviluppato con l'obiettivo di comprendere l'impatto di tali differenze in un'applicazione pratica.
@@ -338,19 +338,18 @@ Quest'ultime si possono essere acquisite  tramite l'oggetto req.body, passato al
 \\Infine, se tutte le operazioni precedenti vengono eseguite correttamente, verrà restituito all'utente il percorso dell'immagine modificata. In caso contrario, verrà restituito un messaggio di errore.
 \newpage
 \section{Metodologia di test}
-Per verificare le prestazioni di ciascuna implementazione presentata, si è deciso di eseguire lo stesso set di test per entrambe.
-\\In particolare è stata scelta una sola elaborazione e durante la sua esecuzione sono stati misurati diversi parametri.
-\\Per scegliere la tipologia di operazione si è empiricamente tentato di carpire quale fosse, tra le elaborazioni implementate, quella più computazionalmente complessa.
-Eseguendo vari test su una stessa immagine e verificando la latenza è stato scelto il \textbf{resize} di un'immagine.
-Ed in particolare il ridimensionamento x0.9, coì da manipolare un alto numero di pixel ed ottenere un'immagine di dimensioni simili a quella di partenza. 
+Per valutare le performance di ciascuna implementazione presentata, si è deciso di eseguire lo stesso \textbf{set di test} su entrambe.
+\\In particolare è stata scelta un'elaborazione specifica tra quelle disponibili e durante la sua esecuzione sono stati misurati diversi parametri.
+\\Per scegliere la tipologia di operazione si è empiricamente tentato di capire quale fosse, tra le elaborazioni implementate, quella più computazionalmente complessa.
+Eseguendo vari test su una stessa immagine e verificando la latenza è stato scelto il \textbf{resize} di un'immagine ed in particolare il resize del 10\% (x0.9), , al fine di manipolare un elevato numero di pixel e ottenere un'immagine di dimensioni simili a quella iniziale.
 \\In seguito sono state scelte le immagini di test e i parametri da misurare.
-Per le immagini si è optato per tre file di dimensioni crescenti:
+Per quanto riguarda le immagini, si è scelto di utilizzare tre file con dimensione crescente:
 \begin{itemize}
     \item 1114 x 742 (0.82 Megapixel, 925 KiloByte);
     \item 2869 x 1912 (5.48 Megapixel, 4.63 MegaByte);
     \item 5578 x 3712 (20.7 Megapixel, 17.4 MegaByte);
 \end{itemize}
-Come parametri da misurare si è optato per:
+Come parametri da misurare si è deciso di focalizzarsi su:
 \begin{itemize}
     \item Latenza per ogni richiesta;
     \item Utilizzo di CPU;
@@ -364,22 +363,21 @@ Per quanto riguarda i software utilizzati, si sono scelte le ultime versioni al 
     \item Wasmtime 11.0
     \item Node 18.17.1 (LTS)
 \end{itemize}
-Il seguente setup, pur non essendo propriamente tipico di un server ha comunque permesso di osservare differenze evidenti tra i due apprrocci esaminati.
+Il seguente setup, pur non essendo propriamente tipico di un server, ha comunque permesso di osservare differenze notevoli tra i due apprrocci esaminati.
 \section{Valutazione delle prestazioni}
 Per ottenere un campione di risultati affidabile sono state eseguite 10 misurazioni per ogni immagine.
-In seguito sono stato calcolati il valore medio del campione ottenuto come media aritmetica e la deviazione standard:
+In seguito sono stato calcolati il valore medio del campione, ottenuto come media aritmetica e la deviazione standard:
 \begin{equation*}
     E[X]=\frac{1}{n}\sum_{i=0}^{n}x_i
 \end{equation*}
 \begin{equation*}
     \sigma_X = \sqrt{\frac{1}{n}\sum_{i=0}^{n}(x_i-E[x])^2}
 \end{equation*}
-Successivamente verranno presentati i grafici per ciascuno dei parametri scelti, rispettivamente utilizzando Rust in combinazione con WebAssembly e Node.js. Ogni grafico conterrà i risultati per ognuna delle tre immagini utilizzati, consentendo così anche una facile analisi visiva.
-Inoltre verranno presentati anche i valori medi per ogni elaborazione e per ogni tipologia di immagine utlizzata (piccola, media, grande).
+Successivamente verranno presentati i grafici per ciascuno dei parametri scelti, utilizzando rispettivamente Rust in combinazione con WebAssembly e Node.js. Ogni grafico conterrà i risultati per ognuna delle tre immagini utilizzati, consentendo così anche una facile analisi visiva.
 \subsection{Latenza}
 Il primo parametro misurato è stato quello della latenza.
-Nello specifico si è analizzato il tempo intercorso tra l'invio di una richiesta di elaborazione e la successiva risposta contenente il percorso della nuova immagine elaborata.
-Per quanto riguarda Rust si sono ottenuti i seguenti risultati sperimentali:
+\\Nello specifico si è analizzato il tempo intercorso tra l'invio di una richiesta di elaborazione e la successiva risposta contenente il percorso della nuova immagine elaborata.
+\\Per quanto riguarda Rust si sono ottenuti i seguenti risultati sperimentali:
 \begin{align*}
     E[X]_{small}&=850ms,  & \sigma_X=154.94ms\\
     E[X]_{medium}&=1487ms, & \sigma_X=144.99ms\\
@@ -402,12 +400,12 @@ Relativemente a Node.js invece:
             \includegraphics[width=1\columnwidth]{images/node_latenza.png}
     \end{center}
     \caption{Latenza misurata utilizzando Node.js}
-\end{figure}
-Come si può notare il tempo di latenza è confrontabile durante l'elaborazione dell'immagine con dimensione minore. Con l'elaborazione delle rimanenti due immagini Rust ha performato notevolmente meglio, impiegando circa un terzo del tempo per l'elaborazione dell'immagine più grande rispetto a Node.js.
-Si può ipotizzare che durante la modifica di immagini piccole WebAssembly non riesca ad essere migliore anche e soprattutto per l'overhead introdotto dall'istanziazione di un modulo e dalle operazioni correlate. Quando però il numero di operazioni destinate alla CPU aumenta si nota sia la tanto nominata "velocità di esecuzione pari a quella del codice nativo" di WebAssembly che il \emph{bottleneck} dovuto a Node.js.
+\end{figure}Come si può notare il tempo di latenza risulta confrontabile solamente durante l'elaborazione dell'immagine con dimensione minore. Durante l'elaborazione delle rimanenti due immagini, WebAssembly ha ottenuto performance notevolmente migliori, richiedendo circa un terzo del tempo necessario a Node.js per l'elaborazione dell'immagine più grande.
+\\È plausibile ipotizzare che, durante la modifica di immagini di piccole dimensioni, WebAssembly non riesca a mettere in evidenza i suoi vantaggi, soprattutto a causa dell'overhead introdotto dalla creazione di un'istanza del modulo e dalle operazioni correlate.
+\\Tuttavia, quando il numero di operazioni a carico della CPU aumenta, emergono sia la tanto citata "velocità di esecuzione pari a quella del codice nativo" di WebAssembly che il bottleneck dovuto all'approccio event-driven di Node.js
 \subsection{Utilizzo CPU}
-In seguito è stato misurato l'utilizzo di CPU di ciascuno dei due approcci presentati durante l'esecuzione di una richiesta, utilizzando le stesse immagini e le stesse impostazioni presentate in preecedenza.
-Anche in questo secondo test si è partiti da Rust e si sono ottenuti i seguenti risultati sperimentali:
+In seguito è stato misurato l'utilizzo della CPU per ciascuno dei due approcci durante l'esecuzione di una richiesta, utilizzando le medesime immagini e impostazioni precedentemente indicate.
+\\Anche in questo secondo test si è partiti dall'approccio basato Rust e sono stati ottenuti i seguenti risultati sperimentali:
 \begin{align*}
     E[X]_{small}&=16.09\%,  & \sigma_X=3.32\%\\
     E[X]_{medium}&=55.35\%, & \sigma_X=3.64\%\\
@@ -419,6 +417,10 @@ Relativemente a Node.js, invece:
     E[X]_{medium}&=16.33\%, & \sigma_X=3.81\%\\
     E[X]_{large}&=18.96\%,  & \sigma_X=2.67\%
 \end{align*}
+Come si può notare, in questo secondo test sono stati ottenuti risultati sostanzialmente differenti dal preceddente.
+\\Nell'approccio basato su WebAssembly si può notare un utilizzo di CPU direttamente proporzionale alla dimensione dell'immagine elaborata, mentre utilizzando Node.js l'utilizzo rimane pressochè costante per tutte e tre le immagini esaminate.
+\\Questi risultati mettono in luce come Rust, combinato con WebAssembly, riesca a sfruttare appieno le capacità computazionali della macchina quando le circostanze lo richiedono.
+\\Al contrario, Node.js dimostra limitazioni nell'impiego ottimale della CPU, traducendosi in tempi di latenza maggiori per richieste ad alta intensità computazionale.
 \begin{figure}
     \begin{center}
             \includegraphics[width=1\columnwidth]{images/rust_cpu.png}
@@ -431,12 +433,9 @@ Relativemente a Node.js, invece:
     \end{center}
     \caption{Utilizzo CPU misurato utilizzando Node.js}
 \end{figure}
-Come si può notare, in questo secondo test sono stati ottenuti risultati sostanzialmente differenti.
-\\Nell'approccio basato su WebAssembly si può notare un utilizzo crescente della CPU al crescere della dimensione dell'immagine. Mentre utilizzando Node.js la CPU viene utilizzata pressochè allo stesso modo per tutte e tre le immagini analizzate.
-\\Ciò fa notare come Rust in combinazione con Wasm sia in grado di sfruttare in maniera massiccia la capacità computazionale della macchina quando le condizioni lo richiedano.
-\\Al contrario Node.js dimostra di non essere in grado di sfruttare la CPU al massimo delle potenzialità con conseguenti tempi di latenza maggiori, per richieste altamente CPU-intensive.
-\newpage\subsection{Consumo memoria}
-Come menzionato in precedenza, l'ultimo test eseguito riguardava il consumo di memoria durante l'esecuzione di una richiesta di elaborazione. 
+\newpage
+\subsection{Consumo memoria}
+Come menzionato in precedenza, l'ultimo test eseguito riguarda il consumo di memoria durante l'esecuzione di una richiesta di elaborazione. 
 \\Per quanto riguarda Rust sono stati ottenuti i seguenti risultati relativi al consumo di memoria:
 \begin{align*}
     E[X]_{small}&=50.24\text{MB},  & \sigma_X=4.91\text{MB}\\
@@ -449,19 +448,27 @@ Per quanto riguarda Node.js, invece:
     E[X]_{medium}&=79.80\text{MB},  & \sigma_X=1.16\text{MB}\\
     E[X]_{large}&=79.92\text{MB},  & \sigma_X=1.55\text{MB}\\
 \end{align*}
+Durante quest'ultima analisi, i risultati ottenuti sono stati molto simili per entrambi gli approcci, ma sostanzialmente differenti rispetto ai test precedenti.
+\\In particolare, Node.js presenta un consumo di memoria leggermnete maggiore, ma in entrambi i casi, tale parametro viene mantenuto pressochè costante per ciascuna tipologia di immagine, non presentando differenze significative.
+\newpage
 \begin{figure}
     \begin{center}
             \includegraphics[width=1\columnwidth]{images/rust_mem.png}
     \end{center}
-    \caption{Consumo memoria misurato durante i test di Rust in combinazione con WebAssembly.}
+    \caption{Consumo di memoria misurato utilizzando Rust in combinazione con Wasm.}
 \end{figure}
 \begin{figure}
     \begin{center}
             \includegraphics[width=1\columnwidth]{images/node_mem.png}
     \end{center}
-    \caption{Consumo memoria misurato utilizzando Node.js}
+    \caption{Consumo di memoria misurato utilizzando Node.js}
 \end{figure}
-\newpage
-In quest'ultimo test i risultati dei test effettuati sono molto simili per entrambi gli approcci. Node.js consuma leggermente più memoria ma in entrambi i casi, tale consumo viene mantenuto pressochè costante per tutte le tipologie di immagine.
-\newpage
 \section{Conclusioni}
+Per concludere questo lavoro di tesi, vengono presentate le considerazioni derivate dai risultati precedentemente esposti.
+\\In primo luogo, è emerso che l'approccio basato su Rust e WebAssembly rappresenta una scelta eccellente in situazioni caratterizzate da operazioni ad alta intensità computazionale. Tuttavia, si rende necessaria un'analisi approfondita per determinare le funzionalità dell'applicazione che potrebbero effettivamente beneficiare di un'implementazione attraverso WebAssembly.
+\\L'integrazione di codice Wasm all'interno di un programma Rust si è rivelata tutt'altro che immediata, comportando inoltre un overhead non trascurabile per un'applicazione che deve gestire un elevato volume di richieste.
+\\D'altro canto Node.js offre un approccio di sviluppo più lineare e accessibile, specialmente per coloro che provengono dalle tecnologie web e posseggono una conoscenza consolidata del linguaggio JavaScript.
+\\Tuttavia, l'adozione di Node.js potrebbe introdurre ulteriori sfide in quanto, per sua natura, risulta più indicato per applicazioni che fanno un ampio utilizzo del file system.
+\\Durante lo svolgimento dei test è stato possibile notare, che Node.js introduce tempi di latenza peggiori rispetto a Wasm già con immagini relativamente piccole per gli standard odierni (5 Megapixel, 4,6 MegaByte). Inoltre è stata evidenziata una scarsa capacità nello sfruttare appieno la CPU, con un utilizzo che è rimasto praticamente costante durante tutti i test.
+\\In conclusione è possibile affermare che l'utilizzo di WebAssembly server side possa rappresentare una scelta ottimale per applicazioni che devono gestire richieste comportanti un elevato numero di calcoli da parte della CPU.
+Tuttavia, è importante evitare un uso eccessivo di questa tecnologia per richieste troppo semplici, al fine di prevenire un overhead non necessario e che potrebbe essere evitato anche utilizzando un linguaggio interpretato come JavaScript. 
