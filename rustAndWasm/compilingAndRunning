@@ -1,3 +1,0 @@
-1. cargo new nomeProgetto
-2. cargo build --target wasm32-wasi --release
-3. wasmtime --dir=/images target/wasm32-wasi/release/hello-world.wasm

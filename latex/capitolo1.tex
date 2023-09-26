@@ -6,7 +6,7 @@
 
 \subsection{Trend di evoluzione del web}
 Inizialmente le applicazioni web erano costituite da semplici \textbf{pagine statiche} contenenti testo e immagini.
-Con l'evoluzione dell'ecosistema web,negli ultimi anni si è assistito a una trasformazione radicale delle applicazioni, guidata da una serie di tendenze e innovazioni tecnologiche che hanno portato a un'esperienza utente sempre più coinvolgente e interattiva.
+Con l'evoluzione dell'ecosistema web, negli ultimi anni si è assistito a una trasformazione radicale delle applicazioni, guidata da una serie di tendenze e innovazioni tecnologiche che hanno portato a un'esperienza utente sempre più coinvolgente e interattiva.
 \\L'introduzione di JavaScript e di librerie e framework correlati, hanno progressivamente arricchito l'interazione con le applicazioni web, introducendo livelli crescenti di interattività e trasformando le semplici pagine statiche in ambienti dinamici e convolgenti. 
 Un cambiamento significativo in tal senso, è avvenuto con l'avvento delle \textbf{Single Page Application (SPA)} e di \textbf{AJAX}.
 Questo approccio ha rivoluzionato il tradizionale modello di navigazione e di sviluppo, consentendo alle applicazioni di essere caricate una sola volta e offrendo interazioni rapide e fluide grazie al caricamento dinamico di contenuti. Questo nuovo paradigma ha introdotto un'esperienza utente simile a quella delle applicazioni native, con transizioni scorrevoli tra le sezioni dell'applicazione e senza interruzioni visibili.
@@ -45,8 +45,8 @@ Le aspettative degli utenti si sono evolute verso applicazioni che offrano prest
 \subsection{Tipologia di applicazione}
 Per tale confronto, si è optato per una web-app che implementi alcune tecniche di \textbf{elaborazione di immagini}.
 In particolare, l'utente avrà la possibilità di eseguire l'upload di immagini su un server e indicare una serie di modifiche da apportare (ad esempio "ridimensionamento del 50\%"). Il server manipolerà i file in base ai parametri ricevuti e infine restituirà al cliente le immagini modificate.
-\\Non verrà esplorato in modo approfondito il campo dell'elaborazione digitale di immagini, ma ci si limiterà all'implementazione di funzionalità usate spesso da utenti comuni, come ad esempio, ridimensionamento, rotazione, aumento/diminuzione di luminosità e contrasto e altre che verranno specificate nel capitolo \ref{chap:3}.
-\\Tale tipologia di applicazione, si sposa bene per lo scopo finale della tesi: valutare come due aprrocci (e due linguaggi) piuttosto differenti, ma sempre più diffusi al giorno d'oggi, risolvano il problema di un'applicazione web che svolga operazioni dall'alto costo computazionale.
+\\Non verrà esplorato in modo approfondito il campo dell'elaborazione digitale di immagini, ma ci si limiterà all'implementazione di funzionalità usate spesso da utenti comuni, come ad esempio, ridimensionamento, rotazione, aumento/diminuzione di luminosità/contrasto e altre che verranno specificate nel capitolo \ref{chap:3}.
+\\Tale tipologia di applicazione, si sposa bene per lo scopo finale della tesi: valutare come due approcci (e due linguaggi) piuttosto differenti, ma sempre più diffusi al giorno d'oggi, risolvano il problema di un'applicazione web che svolga operazioni dall'alto costo computazionale.
 \begin{figure}
         \begin{center}
                 \includegraphics[width=0.55\columnwidth]{images/imageProc.jpg}
@@ -57,7 +57,7 @@ In particolare, l'utente avrà la possibilità di eseguire l'upload di immagini 
 \subsection{Metodologie confrontate}
 Le due modalità di sviluppo in esame riguarderanno l'utilizzo delle tecnologie JavaScript e WebAssembly lato server e quindi rispettivamente del runtime environment Node.js e del linguaggio di programmazione \textbf{Rust} in combinazione con WebAssembly System Interface\cite*{rust:wasm}. 
 \\La scelta di Node.js deriva dal suo utilizzo sempre maggiore grazie all'utilizzo del linguaggio JavaScript, dall'approccio asincrono nella gestione delle richieste e dalla sua ottima scalabilità per applicazioni fortemente File-System-Intensive.
-Per quanto riguarda la seconda tecnologia si è invece optato per Rust, in quanto consente sia la scrittura di \textbf{moduli} che succesivamente \textbf{compilabili in WebAssembly}, sia il loro utilizzo efficiente all'interno del codice, mantenendo in questo modo un'ottima coerenza e risultando, teoricamente, una buona scelta per lo sviluppo di applicazioni computazionalmente complesse. 
+Per quanto riguarda la seconda tecnologia si è invece optato per Rust, in quanto consente sia la scrittura di \textbf{moduli} successivamente \textbf{compilabili in WebAssembly}, sia il loro utilizzo efficiente all'interno del codice, mantenendo in questo modo un'ottima coerenza e risultando, teoricamente, una buona scelta per lo sviluppo di applicazioni computazionalmente complesse. 
 
 \subsection{Analisi Comparativa delle Tecnologie}
 Un elemento iniziale di questa ricerca sarà un'analisi dettagliata delle tecnologie prese in esame. 

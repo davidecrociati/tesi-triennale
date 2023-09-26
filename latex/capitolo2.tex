@@ -78,7 +78,7 @@ Il modello computazionale di WebAssembly è basato su uno \textbf{stack}. Il cod
 \subsubsection{Traps} 
 Alcune istruzioni possono fallire e generare degli errori (traps) che non è possibile gestire all'interno di WebAssembly. Tali errori vengono infatti lanciati nell'ambiente di esecuzione dell'host dove, al contrario, possono essere catturati e gestiti opportunamente.
 \subsubsection{Funzioni}
-Il codice è diviso in funzioni. Ognuna di queste ha una certe sequenza di valori sia come parametri che come tipo di ritorno. In una funzione viene eseguita una serie di istruzioni, possono inoltre essere chiamate altre funzioni (anche ricorsivamente) e create variabili locali.
+Il codice è diviso in funzioni. Ognuna di queste ha una certa sequenza di valori sia come parametri di input, che come tipo di ritorno. In una funzione viene eseguita una serie di istruzioni, possono inoltre essere invocate altre funzioni (anche ricorsivamente) e create variabili locali.
 \subsubsection{Tabelle}
 Una tabella è un array di valori "opachi" di un particolare tipo. Tale struttura consente al programma di ottenere i valori indirettamente attraverso un indice dinamico. Tramite le tabelle è possibile, per esempio invocare funzioni indirettamente, emulando in questo modo i puntatori a funzione.
 \subsubsection{Memoria lineare}
@@ -199,13 +199,13 @@ Nonostante durante lo sviluppo iniziale del linguaggio ci si fosse concentrati s
 wasm-pack build
 \end{lstlisting}
 Tale comando compilerà il programma in un modulo WebAssembly, generando un file \textbf{.wasm} utilizzabile dal codice JavaScript della nostra pagina web.
-\\Bisogna però sottolineare che sin dagli albori di WebAssembly, non era mai stata fatta nessuna assunzione sull'ambiente host e che il utilizzo non sarebbe stato limitato alle sole pagine web.
+\\Bisogna però sottolineare che sin dagli albori di WebAssembly, non era mai stata fatta nessuna assunzione sull'ambiente host e che soprattutto il suo utilizzo non sarebbe stato limitato alle sole pagine web.
 \\In particolare, per lo scopo di questa tesi, sarà necessario che i moduli WebAssembly vengano istanziati ed eseguiti server side, ma soprattuto che tali moduli abbiano accesso al \textbf{file system} e a funzioni di \textbf{I/O}.
 Tali funzioni in WebAssembly non sono disponibili, a causa dell'esecuzione all'interno di una sandbox e delle caratteristiche di sicurezza. Per questi e per molti altri motivi è stato sviluppato WASI (WebAssembly System Interface).
 \newpage
 \section{WebAssembly System Interface}
 \label{sec:WASI}
-WebAssembly System Interface è una famiglia di API progettate dai membri della Bytecode Alliance durante lo sviluppo del progetto \textbf{Wasmtime}.\cite*{wasiHome}
+WebAssembly System Interface è una famiglia di APIs progettate dai membri della Bytecode Alliance durante lo sviluppo del progetto \textbf{Wasmtime}.\cite*{wasiHome}
 \\WASI si propone di standardizzare l'accesso a varie funzionalità tipicamente associate ai sistemi operativi, da parte di programmi scritti in WebAssembly.
 In particolare, lo sviluppo è partito da una serie di funzioni basiche simili a quelle contenute in POSIX.
 D'ora in avanti queste funzioni verranno spesso menzionate come \textbf{syscall}, in quanto esse hanno uno scopo simile o analogo a quello delle system call in programmi eseguibili nativi.
@@ -231,12 +231,12 @@ WebAssembly System Interface è tutt'ora in fase di sviluppo secondo una serie d
 \subsubsection{Capability}
 WASI segue un concetto di sicurezza basata su capability che era già stata presentata qualche anno prima da CloudABI's.
 \\File, directory, socket e altre risorse sono identificati da \textbf{indici interi} (paragonabili ai file descriptor utilizzati nei sistemi UNIX), di tabelle esterne che contengono le capabilities per un certo modulo WASI.
-\\Le API di WASI potranno quindi accedere ed utilizzare una risorsa, solo se a questa è associata una deterrminata capability.
+\\Le API di WASI potranno quindi accedere ed utilizzare una risorsa, solo se a questa è associata una determinata capability.
 Ad esempio, per l'apertura di un file WASI mette a disposizione una system call simile alla \textbf{openat}.
 Essa si aspetta che il processo chiamante abbia il file descriptor della directory contenente tale file, il quale rappresenterà la capability per l'apertura dei file all'interno di quella specifica directory.
 \\In realtà è anche possibile un approccio più simile alla classica system call "open".
 Infatti, grazie alla pre-apertura di una directory al lancio del programma essa verrà inclusa nella tabella delle capabilities, la quale verrà automaticamente controllata a runtime ogni volta che il programma invocherà la "open".
-\\Tutto ciò è simile a ciò che avviene normalmente in POSIX, con la differenza che POSIX normalmente consente ad un processo di richiedere qualsiasi file descriptor nell'intero file system e poi l'accesso sarà concesso a seconda delle policy di sistema, mentre in WASI è necessario che un programma abbia le capability giuste per accedere alle risorse di una certa directory. In questo modo diventa possbile l'esecuzione di codice non attendibile, dando permessi per specifiche directory a runtime, senza la necessità di impostare permessi nel file system.\cite*{wasi:capabilities}
+\\Tutto ciò è simile a ciò che avviene normalmente in POSIX, con la differenza che POSIX consente ad un processo di richiedere qualsiasi file descriptor nell'intero file system e poi l'accesso sarà concesso a seconda delle policy di sistema, mentre in WASI è necessario che un programma abbia le capability giuste per accedere alle risorse di una certa directory. In questo modo diventa possbile l'esecuzione di codice non attendibile, dando permessi per specifiche directory a runtime, senza la necessità di impostare permessi nel file system.\cite*{wasi:capabilities}
 \subsubsection{Interposizione}
 L'interposizione è la capacità di un'istanza di WebAssembly di implementare un'interfaccia WASI che poi potrà essere utilizzata in maniera trasparente da un'altra istanza (consumer).
 Ciò può essere sfruttato per adattare o attenuare le funzionalità di un API WASI, senza cambiare il codice che la utilizza.
@@ -259,7 +259,7 @@ Al momento le soluzioni possbili per un embedding di questo tipo, sono diverse (
 Tra queste si è optato per Wasmtime, un progetto sviluppato della Bytecode Alliance (gli stessi sviluppatori di WASI).
 \\Wasmtime è un \textbf{runtime environment standalone}, ottimizzato per WebAssembly e WASI.
 Permette di eseguire codice WebAssembly all'esterno del browser in applicazioni di qualsiasi grandezza e scritte in molteplici linguaggi differenti (Rust, C, Python, Go, Ruby, Bash etc.).
-\\Proprio come in WebAssembly, un'obiettivo di Wasmtime è quello di eseguire codice non attendibile in sicurezza all'interno di una sandbox.
+\\Proprio come in WebAssembly, un obiettivo di Wasmtime è quello di eseguire codice non attendibile in sicurezza all'interno di una sandbox.
 Inoltre Wasmtime implementa le API di WASI per l'accesso al file system, in modo che un programma possa accedere solo ai file e alle directory per i quali ha le capability necessarie.
 \cite*{wasmtime}
 \newpage
@@ -415,7 +415,7 @@ Node.js sta acquisendo sempre più popolarità negli anni grazie alle sue peculi
 \end{figure}
 \subsection{Casi d'uso}
 \subsubsection{Applicazioni Web}
-Node.js risulta spesso una buona scelta per applicazioni che debbano gestire un alto numero di richieste concorrenti, che implichiano operazioni di I/O, sia da filesystem, che da un database.
+Node.js risulta spesso una buona scelta per applicazioni che debbano gestire un alto numero di richieste concorrenti, che implicano operazioni di I/O, sia da filesystem, che da un database.
 \subsubsection{Microservizi}
 Node.js viene utilizzato anche per lo sviluppo di architetture a microservizi, consentendo la scrittura di piccoli servizi specializzati, ben integrati tra loro. Grazie all'architettura event-based, al thread singolo e alle performance elevate node.js si è ben presto rivelato un'ottima alternativa anche in quest'ambito. Si sottolinea inoltre, che l'approccio a microservizi può migliorare in maniera selettiva la scalabilità e semplificare ampiamente il deployment di applicazioni complesse.
 \subsubsection{Real Time Application}
@@ -454,7 +454,7 @@ Si potrebbere scalare in verticale un singolo server, aumentando le risorse disp
 Infine anche in Node.js è possbile implementare un'architettura a microservizi.
 \section{Conclusioni preliminari}
 \label{sec:ConclusioniTecnologie}
-La comprazione appena effettuata, ha ulteriormente enfatizzato l'importanza di condurre un attenta analisi sui requisiti dell'applicazione che si sta progettando.
+La comprazione appena effettuata, ha ulteriormente enfatizzato l'importanza di condurre un'attenta analisi sui requisiti dell'applicazione che si sta progettando.
 In particolare, l'approccio basato su Rust combinato con WebAssembly si distingue per le sue ottime prestazioni, l'alto livello di sicurezza offerto e la sua capacità di risolvere efficacemente problemi legati alla scalabilità.
 \\D'altra parte, Node.js si contraddistingue per la sua facilità di sviluppo e la notevole scalabilità nelle operazioni fortemente orientate all'I/O.
 \\Nel capitolo successivo si cercherà di valutare se tali differenze abbiano un impatto significativo all'interno di un'applicazione reale, cercando di misurare l'influenza di ciascuna tecnologia in un contesto in cui le operazioni sono prevalentemente CPU-intensive.
