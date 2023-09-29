@@ -35,7 +35,7 @@ Tali operazioni sono state selezionate poiché rappresentano funzionalità frequ
 \section{Implementazione in Rust e Wasm/WASI}
 Per quanto riguarda l'implementazione si è deciso di partire dal prototipo sviluppato in Rust poiché rappresentava l'aspetto più innovativo e richiedeva un considerevole impegno in termini di tempo.
 \\Si è resa inoltre necessaria la ricerca di un framework che consentisse la creazione di un Web server per la gestione delle richieste utente.
-\\La scelta è ricaduta su actix-Web, un Web framework potente ed estremamente veloce per Rust.
+\\La scelta è ricaduta su actix-web, un Web framework potente ed estremamente veloce per Rust.
 \\Il client è costituito da una semplice pagina HTML contenente un form per il caricamento delle immagini e due riquadri che mostrano l'immagine pre e post modifiche.
 Tale pagina eseguirà una richiesta AJAX al server, inviando il file da elaborare e le relative specifiche sulle modifiche.
 \\Terminata l'elaborazione il server restituirà il percorso della nuova immagine pronta per essere scaricata.
