@@ -1,15 +1,15 @@
 \chapter{Tecnologie utilizzate}
 \label{chap:2}
-Come già introdotto brevemente nel capitolo \ref{chap:1}, il focus di questa tesi è stato impostato sulla comparazione di due approcci radicalmente distinti, ma entrambi sempre più rilevanti nelle applicazioni web moderne. Si inizierà esaminando l'uso di WebAssembly e dell'interfaccia di sistema WASI, nonché la loro integrazione all'interno di un'applicazione Rust, per poi concludere con un'analisi di Node.js.
+Come già introdotto brevemente nel capitolo \ref{chap:1}, il focus di questa tesi è stato impostato sulla comparazione di due approcci radicalmente distinti, ma entrambi sempre più rilevanti nelle applicazioni Web moderne. Si inizierà esaminando l'uso di WebAssembly e dell'interfaccia di sistema WASI, nonché la loro integrazione all'interno di un'applicazione Rust, per poi concludere con un'analisi di Node.js.
 
 \section{WebAssembly}
 \label{sec:Wasm}
-WebAssembly (\textbf{Wasm}) è uno standard che definisce un formato \textbf{binario} (.wasm) e un relativo formato \textbf{testuale} (.wat) per la scrittura di codice eseguibile nelle pagine web. 
+WebAssembly (\textbf{Wasm}) è uno standard che definisce un formato \textbf{binario} (.wasm) e un relativo formato \textbf{testuale} (.wat) per la scrittura di codice eseguibile nelle pagine Web. 
 Attualmente, il suo sviluppo è gestito in modo open-source da un \emph{Community Group} del W3C, il quale coinvolge sviluppatori dei browser più utilizzati.
 \\Esso è nato principalmente come \textbf{integrazione a JavaScript}, con l'obiettivo di consentire l'esecuzione di codice ad una velocità paragonabile a quella del codice nativo.
 Ciò è possibile grazie alle dimensioni ridotte dei file binari generati e alla loro efficienza.
 \\Inoltre grazie all'esecuzione all'interno di una sandbox garantisce un ottima sicurezza, anche sotto il punto di vista della memoria.
-\\Grazie al formato testuale (.wat), è possbile eseguire debug, test, ottimizzazioni, scrivere a mano programmi di basso livello, ma anche visualizzare i sorgenti dei moduli wasm, quando questi sono utilizzati una pagina web.
+\\Grazie al formato testuale (.wat), è possbile eseguire debug, test, ottimizzazioni, scrivere a mano programmi di basso livello, ma anche visualizzare i sorgenti dei moduli wasm, quando questi sono utilizzati una pagina Web.
 \cite*{wasmDesign}
 \\Oggi WebAssembly sta vivendo una crescita costante, sia nel numero di linguaggi che possono avere come \emph{compilation target} Wasm (Rust, C, Go, Kotiln, etc), sia nel numero di siti che sfruttano tale tecnologia. Questo successo è dovuto anche al fatto che praticamente tutti i browser attualmente in uso offrono supporto per WebAssembly. 
 \begin{figure}
@@ -26,14 +26,14 @@ WebAssembly nasce nel 2015, ispirandosi fortemente ad altre due tecnologie prees
 L'obiettivo di NaCl era consentire l'esecuzione di codice nativo all'interno del browser, confinato in una \textbf{sandbox} con privilegi limitati.
 In particolare si stava cercando di supportare software che richiedevano grande sforzo computazionale, come simulazioni, elaborazioni audio-video e giochi.
 \\Il progetto si rivelò un successo sotto il punto di vista prestazionale. Vennero infatti rilasciati diversi software e giochi che presentavano prestazioni simili alla rispettiva versione Desktop.
-Tuttavia NaCl presentava diverse limitazioni, in quanto il codice ottenuto era eseguibile solo nel browser Chrome ed era impossibile l'interazione con JavaScript o con altre API web.
+Tuttavia NaCl presentava diverse limitazioni, in quanto il codice ottenuto era eseguibile solo nel browser Chrome ed era impossibile l'interazione con JavaScript o con altre API Web.
 \\Un tentativo di evoluzione fu presentato nel 2013 dal team di Mozilla. Si trattava di \textbf{asm.js}, un sottoinsieme di JavaScript che consentiva l'invocazione di funzioni scritte in linguaggi come C, C++ o Rust, in diversi browser e direttamente da JavaScript.
 A discapito di una maggior portabilità ci fu una significativa diminuzione delle prestazioni, dovuta alla lentezza dell'interprete JavaScript, che era stato caricato di un notevole overhead.
 \\Queste due soluzioni dimostrarono la possbilità di eseguire codice in una sandbox, o con ottime prestazioni, ma solo all'interno di Chrome (NaCl), oppure in diversi browser ma con prestazioni decisamente inferiori (asm.js).
 Si voleva quindi trovare un modo per unificare gli enormi vantaggi offerti da ognuno dei due approcci.\cite*{wasmBook}
 \subsubsection{La nascita di Wasm}
 La nascita di WebAssembly è avvenuta nel giugno 2015, quando Brendan Eich (il creatore di JavaScript) insieme ad altri sviluppatori di Mozilla ha annunciato l'inizio dello sviluppo. \cite*{asmjsToWasm}
-Wasm venne presentato come "un nuovo standard open source che definiva un formato e un modello di esecuzione portabile, efficiente in termini di dimensioni e tempo di caricamento, specificamente progettato come target di compilazione per il web".
+Wasm venne presentato come "un nuovo standard open source che definiva un formato e un modello di esecuzione portabile, efficiente in termini di dimensioni e tempo di caricamento, specificamente progettato come target di compilazione per il Web".
 WebAssembly prometteva prestazioni fino a 20 volte superiori rispetto ad asm.js, grazie alla maggiore velocità di decodifica dei file binari, rispetto al parsing da parte dell'interprete JavaScript per i file di asm.js.
 \\Nel 2017 è stato lanciato il \emph{minimum viable product} (MVP), che conteneva pressochè le stesse funzionalità presenti in asm.js e venne dichiarata conclusa la fase di preview.
 Capendo le potenzialità di ciò che stava venendo sviluppato hanno dato il loro contributo al progetto, aziende del calibro di Google, Microsoft, Apple, Unity.
@@ -51,7 +51,7 @@ Inizialmente ci si è concentrati sull'utilizzo di WebAssembly all'interno del b
         \item Applicazioni per desktop ridimensionamento;
         \item Web server locali;
 \end{itemize}
-Si era pensato fin da subito anche alla portabilità ed erano stati presentati diversi possibili utilizzi anche per ambienti non-web:
+Si era pensato fin da subito anche alla portabilità ed erano stati presentati diversi possibili utilizzi anche per ambienti non-Web:
 \begin{itemize}
         \item Esecuzione server-side di codice non attendibile;
         \item Servizi per la distribuzione di giochi;
@@ -98,7 +98,7 @@ Solitamente un modulo WebAssembly sarà integrato in un host che ne definirà l'
 \subsection{Fasi semantiche}
 Nella semantica di WebAssembly è possibile individuare tre fasi principali: decodifica, validazione ed esecuzione.\cite*{wasmSpec}
 \subsubsection{Decodifica}
-I moduli WebAssembly sono distribuiti in formato binario (.wasm) e per questo è necessario decodificarli in modo da ottenere una rappresentazione interna del modulo, con cui il web browser o il runtime environment potrà lavorare.
+I moduli WebAssembly sono distribuiti in formato binario (.wasm) e per questo è necessario decodificarli in modo da ottenere una rappresentazione interna del modulo, con cui il Web browser o il runtime environment potrà lavorare.
 \subsubsection{Validazione}
 Dopo aver decodificato i moduli binari, per poterli istanziare, è necessario controllare che questi siano validi.
 La validità è verificata grazie ad un sistema di tipi basato sulla sintassi astratta di un modulo e sul suo contenuto. In particolare per ogni componente della sintassi è presente una regola che specifica le condizioni da rispettare perchè il modulo risulti valido.
@@ -198,8 +198,8 @@ Nonostante durante lo sviluppo iniziale del linguaggio ci si fosse concentrati s
 \begin{lstlisting}[language=Bash, numbers=none, label=lst:RustCompile, caption={}]
 wasm-pack build
 \end{lstlisting}
-Tale comando compilerà il programma in un modulo WebAssembly, generando un file \textbf{.wasm} utilizzabile dal codice JavaScript della nostra pagina web.
-\\Bisogna però sottolineare che sin dagli albori di WebAssembly, non era mai stata fatta nessuna assunzione sull'ambiente host e che soprattutto il suo utilizzo non sarebbe stato limitato alle sole pagine web.
+Tale comando compilerà il programma in un modulo WebAssembly, generando un file \textbf{.wasm} utilizzabile dal codice JavaScript della nostra pagina Web.
+\\Bisogna però sottolineare che sin dagli albori di WebAssembly, non era mai stata fatta nessuna assunzione sull'ambiente host e che soprattutto il suo utilizzo non sarebbe stato limitato alle sole pagine Web.
 \\In particolare, per lo scopo di questa tesi, sarà necessario che i moduli WebAssembly vengano istanziati ed eseguiti server side, ma soprattuto che tali moduli abbiano accesso al \textbf{file system} e a funzioni di \textbf{I/O}.
 Tali funzioni in WebAssembly non sono disponibili, a causa dell'esecuzione all'interno di una sandbox e delle caratteristiche di sicurezza. Per questi e per molti altri motivi è stato sviluppato WASI (WebAssembly System Interface).
 \newpage
@@ -215,7 +215,7 @@ Bisogna però tenere a mente che tali "syscall" sono semplicemente una serie di 
         \item Funzioni per le socket di Berkeley;
         \item Funzionalità relative al tempo e ai numeri random;
 \end{itemize}
-WASI è progettato in modo da essere indipendente dai browser e da non dipendere da JavaScript o da API web. Inoltre utilizza un sistema di sicurezza \emph{capability based} che consente di estendere le caratteristiche di sandboxing presenti in WebAssembly, rendendo possibile l'I/O.
+WASI è progettato in modo da essere indipendente dai browser e da non dipendere da JavaScript o da API Web. Inoltre utilizza un sistema di sicurezza \emph{capability based} che consente di estendere le caratteristiche di sandboxing presenti in WebAssembly, rendendo possibile l'I/O.
 \\Attualmente WASI ha attraversato due fasi di preview (preview0, preview1), le quali dovrebbero essere seguite da due ulteriori preview e infine dalla prima release ufficiale (WASI 1.0).
 \subsection{Gli obiettivi}
 WASI è nato con una serie di obiettivi di alto livello, che si ispirano e integrano gli obiettivi di WebAssembly.\cite*{wasi:goals} Esso si propone di:
@@ -273,11 +273,11 @@ Le caratteristiche più importanti di Rust sono:
         \item \textbf{Concorrenza}: Rust fornisce supporto built-in per programmi concorrenti;
         \item \textbf{Astrazione a costo zero}: è possibile scrivere codice espressivo e leggibile di alto livello con prestazioni equivalenti allo stesso codice, ma di più basso livello;
         \item \textbf{Ecosistema}: le librerie e gli strumenti (\textbf{crates}), sono facilmente integrabili all'interno dei progetti, grazie anche al package manager cargo che risolve automaticamente le dipendenze;
-        \item \textbf{Multipiattaforma}: Rust supporta svariate architetture e sistemi operativi, rendendolo un ottima scelta per una vasta gamma di applicazioni, dai sistemi embedded, ai web server;
+        \item \textbf{Multipiattaforma}: Rust supporta svariate architetture e sistemi operativi, rendendolo un ottima scelta per una vasta gamma di applicazioni, dai sistemi embedded, ai Web server;
         \item \textbf{Forte tipizzazione}: La tipizzazione contribuisce alla diminuzione di crash a runtime, catturando molti errori già a tempo di compilazione;
         \item \textbf{WebAssembly}: Rust consente la compilazione di codice in moduli WebAssembly, consentendo l'esecuzione di codice nativo all'interno del browser o di altri environment WebAssembly;
 \end{itemize}
-Grazie a queste peculiarità Rust si presta ad una grande varietà di casi d'uso, come la programmazione di sistema, lo sviluppo di web application prestazionali grazie per esempio, ai framework Rocket o Actix, lo sviluppo di giochi ma anche di applicazioni per sistemi con poche risorse a disposizione (IoT e sistemi embedded).
+Grazie a queste peculiarità Rust si presta ad una grande varietà di casi d'uso, come la programmazione di sistema, lo sviluppo di Web application prestazionali grazie per esempio, ai framework Rocket o Actix, lo sviluppo di giochi ma anche di applicazioni per sistemi con poche risorse a disposizione (IoT e sistemi embedded).
 \newpage
 \subsection{Esempi}
 \subsubsection{System Call WASI}
@@ -396,7 +396,7 @@ Read in from file: Esempio WASI!
 \newpage
 \section{Node.js}
 \label{sec:Node}
-Node.js è un \textbf{runtime environment} che consente l'esecuzione di codice JavaScript server-side e fornisce una piattaforma versatile ed efficiente per lo sviluppo di applicazioni web concorrenti e scalabili.
+Node.js è un \textbf{runtime environment} che consente l'esecuzione di codice JavaScript server-side e fornisce una piattaforma versatile ed efficiente per lo sviluppo di applicazioni Web concorrenti e scalabili.
 \subsection{Funzionalità cardine}
 Node.js sta acquisendo sempre più popolarità negli anni grazie alle sue peculiarità che lo rendono un'ottima scelta per una grande varietà di applicazioni. In particolare Node.js si è distinto per: 
 \begin{itemize}

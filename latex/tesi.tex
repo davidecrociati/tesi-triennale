@@ -196,11 +196,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % LISTA DEI CAPITOLI DA INCLUDERE - PERSONALIZZARE
-\includeonly{%
+\includeonly{
+introduzione,
 capitolo1,
 capitolo2,
-capitolo3
-%app_a,%
+capitolo3,
+conclusioni
 }
 
 % FILE DI BIBLIOGRAFIA
@@ -213,19 +214,12 @@ capitolo3
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% FRONTESPIZIO - PERSONALIZZARE
-% ELIMINATE LE VOCI CHE NON VI SERVONO
-
 % UNIVERSITA - NOME
 \ateneo{Alma Mater Studiorum - Università di Bologna}
 
-% FACOLTA - DICITURA - CANCELLARE O DECOMMENTARE
-%\FacoltaDi{Faculty of}
 % FACOLTA - NOME
 \facolta{Ingegneria}
 
-% CORSO DI LAUREA - DICITURA (MANTENERE LO SPAZIO) - CANCELLARE O DECOMMENTARE
-%\CorsoDiLaureaIn{Master of Science in }
 % CORSO DI LAUREA - NOME
 \corsodilaurea{Ingegneria Informatica}
 
@@ -238,26 +232,11 @@ capitolo3
 % SOTTOTITOLO
 \sottotitolo{Tesi in Tecnologie Web}
 
-% RELATORE/I - DICITURA - CANCELLARE SE UN SOLO RELATORE
-%\AdvisorName{Relatori}
 % RELATORE - PROF. NOME E COGNOME
 \relatore{prof.\ Paolo Bellavista}
-% RELATORE AGGIUNTIVO - PROF NOME E COGNOME
-% SE SI HA SOLO UN RELATORE ELIMINARE INSIEME AD AdvisorName
-%\secondorelatore{prof.\ Neo Cortex}
-
-% TUTORE AZIENDALE - TITOLO NOME E COGNOME
-%\tutoreaziendale{Ing. Carlino Cane}
-% TUTORE AZIENDALE - DICITURA//AZIENDA
-%\NomeTutoreAziendale{Tutore Aziendale\\FeelGood Inc}
-
-% CANDIDATO - DICITURA (MANTENERE I DUE PUNTI) - CANCELLARE O DECOMMENTARE
-%\CandidateName{Candidate:}
 
 % CANDIDATO - NOME E COGNOME
 \candidato{Davide Crociati}
-% LOGO UNIVERSITA
-%\logosede{images/logo}
 
 % DATA - MESE ANNO
 \sedutadilaurea{Ottobre 2023}
@@ -272,25 +251,6 @@ capitolo3
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \frontmatter
-
-% DEDICA - PERSONALIZZARE
-% VSPACE - PROPORZIONE USATA PER CENTRATURA VERTICALE DEL TESTO
-% FLUSHRIGHT - ALLINEAMENTO ORIZZONTALE A DESTRA
-%\vspace*{\stretch{1}}
-%\begin{flushright}
-%\noindent
-%A voi
-%\end{flushright}
-%\vspace*{\stretch{6}}
-%\cleardoublepage
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% ABSTRACT - PERSONALIZZARE
-\sommario
-Piacere, sommario.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -312,6 +272,7 @@ Piacere, sommario.
 
 \mainmatter
 
+\include{introduzione}
 % INCLUSIONE FILE CAPITOLI - PERSONALIZZARE - TENERE COERENTE CON LISTA IN ALTO
 \include{capitolo1}
 \include{capitolo2}
@@ -319,13 +280,13 @@ Piacere, sommario.
 \newpage\null\thispagestyle{empty}\newpage
 %\appendix
 % INCLUSIONE APPENDICI - - PERSONALIZZARE - TENERE COERENTE CON LISTA IN ALTO
-%\include{app_a}
+\include{conclusioni}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % RINGRAZIAMENTI - PERSONALIZZARE
-\ringraziamenti
-Grazie a tutti.
+%\ringraziamenti
+%Grazie a tutti.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

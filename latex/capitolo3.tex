@@ -34,8 +34,8 @@ Tali operazioni sono state selezionate poiché rappresentano funzionalità frequ
 \newpage
 \section{Implementazione in Rust e Wasm/WASI}
 Per quanto riguarda l'implementazione si è deciso di partire dal prototipo sviluppato in Rust poiché rappresentava l'aspetto più innovativo e richiedeva un considerevole impegno in termini di tempo.
-\\Si è resa inoltre necessaria la ricerca di un framework che consentisse la creazione di un web server per la gestione delle richieste utente.
-\\La scelta è ricaduta su actix-web, un web framework potente ed estremamente veloce per Rust.
+\\Si è resa inoltre necessaria la ricerca di un framework che consentisse la creazione di un Web server per la gestione delle richieste utente.
+\\La scelta è ricaduta su actix-Web, un Web framework potente ed estremamente veloce per Rust.
 \\Il client è costituito da una semplice pagina HTML contenente un form per il caricamento delle immagini e due riquadri che mostrano l'immagine pre e post modifiche.
 Tale pagina eseguirà una richiesta AJAX al server, inviando il file da elaborare e le relative specifiche sulle modifiche.
 \\Terminata l'elaborazione il server restituirà il percorso della nuova immagine pronta per essere scaricata.
@@ -60,8 +60,8 @@ Tra questi, il file primario è \textbf{main.rs}, che svolge un ruolo centrale n
 async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
-            .route("/", web::get().to(server::handlers::index))
-            .route("/upload", web::post().to(server::handlers::upload))
+            .route("/", Web::get().to(server::handlers::index))
+            .route("/upload", Web::post().to(server::handlers::upload))
             .service(fs::Files::new("/script", "./src/static/"))
             .service(fs::Files::new("/img", "./img/"))
             .app_data(state.clone())
@@ -252,10 +252,10 @@ Dopo aver terminato l'implementazione del prototipo mediante l'utilizzo di Rust 
 \\La seconda implementazione è risultata notevolmente più immediata.
 In particolare è stato possibile riutilizzare il client sviluppato precedentemente, senza necessità di un'analisi approfondita per l'integrazione di un modulo WebAssembly.
 Come verrà sottolineato in seguito, ciò ha permesso di ottenere un \textbf{codice} decisamente più \textbf{pulito} e di lunghezza proporzionata alla semplicità dell'applicazione sviluppata.
-\\La ricerca si è dunque focalizzata sulla selezione di un moduli adeguati per la creazione di un'applicazione web in grado di supportare l'upload e l'elaborazione di immagini.
-La scelta è ricaduta sul web framework \textbf{express.js}, in combinazione con il middleware \textbf{multer} e la libreria \textbf{Jimp}.
+\\La ricerca si è dunque focalizzata sulla selezione di un moduli adeguati per la creazione di un'applicazione Web in grado di supportare l'upload e l'elaborazione di immagini.
+La scelta è ricaduta sul Web framework \textbf{express.js}, in combinazione con il middleware \textbf{multer} e la libreria \textbf{Jimp}.
 \subsection{Express.js}
-Express.js è un \textbf{web framework} che semplifica lo sviluppo di applicazioni web robuste e scalabili. Esso è stato riconosciuto come lo \textbf{standard de facto} in quest'ambito.
+Express.js è un \textbf{Web framework} che semplifica lo sviluppo di applicazioni Web robuste e scalabili. Esso è stato riconosciuto come lo \textbf{standard de facto} in quest'ambito.
 \\Il design di Express è relativamente minimale, tuttavia, grazie all'impiego di \textbf{plugin} e \textbf{middleware} come Multer, è in grado di fornire una vasta gamma di funzionalità.
 \\Il framework inoltre rende più semplice il routing, gestendo richieste e risposte HTTP in modo semplice e diretto.
 \\Per quanto concerne la nostra applicazione, dopo aver importato i moduli richiesti, è essenziale effettuare una configurazione breve ma precisa, per la gestione delle richieste necessarie e per la configurazione dell'upload dei file.
@@ -468,7 +468,7 @@ Durante quest'ultima analisi, i risultati ottenuti sono stati molto simili per e
 Per concludere questo lavoro di tesi, vengono presentate le considerazioni derivate dai risultati precedentemente esposti.
 \\In primo luogo, è emerso che l'approccio basato su Rust e WebAssembly rappresenta una \textbf{scelta eccellente} in situazioni caratterizzate da operazioni ad \textbf{alta intensità computazionale}. Tuttavia, si rende necessaria un'analisi approfondita per determinare le funzionalità dell'applicazione che potrebbero effettivamente beneficiare di un'implementazione attraverso WebAssembly.
 \\L'integrazione di codice Wasm all'interno di un programma Rust si è rivelata tutt'altro che immediata, comportando inoltre un \textbf{overhead} non trascurabile per un'applicazione che deve gestire un elevato volume di richieste.
-\\D'altro canto Node.js offre un approccio di sviluppo più lineare e accessibile, specialmente per coloro che provengono dalle tecnologie web e posseggono una conoscenza consolidata del linguaggio JavaScript.
+\\D'altro canto Node.js offre un approccio di sviluppo più lineare e accessibile, specialmente per coloro che provengono dalle tecnologie Web e posseggono una conoscenza consolidata del linguaggio JavaScript.
 \\Tuttavia, l'adozione di Node.js potrebbe introdurre ulteriori sfide in quanto, per sua natura, risulta più indicato per applicazioni che fanno un ampio utilizzo del file system e in seguito alla debole tipizzazione potrebbe introdurre un numero di controlli molto elevato rispetto a Rust.
 \\Durante lo svolgimento dei test è stato possibile notare, che Node.js introduce tempi di latenza peggiori rispetto a Wasm già con immagini relativamente piccole per gli standard odierni (5 Megapixel, 4,6 MegaByte). Inoltre è stata evidenziata una scarsa capacità nello sfruttare appieno la CPU, con un utilizzo che è rimasto praticamente costante durante tutti i test.
 \\In conclusione è possibile affermare che l'utilizzo di WebAssembly server side può rappresentare una \textbf{scelta ottimale} per applicazioni che devono gestire richieste comportanti un elevato numero di calcoli da parte della CPU.
