@@ -1,6 +1,6 @@
 \chapter{Prototipo per esecuzione efficiente di codice Wasm con tecniche di Image Processing}
 \label{chap:3}
-Nel capitolo precedente sono state esaminate le differenze sostanziali tra un'approccio basato su Rust in combinazione con WebAssembly e uno basato su Node.js.
+Nel capitolo precedente sono state esaminate le differenze sostanziali tra un approccio basato su Rust in combinazione con WebAssembly e uno basato su Node.js.
 In questo capitolo si presenterà il prototipo sviluppato con l'obiettivo di comprendere l'impatto di tali differenze in un'applicazione pratica.
 \section{Descrizione dell'applicazione}
 Il prototipo sviluppato è un'applicazione dedicata all'elaborazione digitale di immagini, concepita per simulare un contesto realistico in cui le operazioni richiedono una considerevole quantità di elaborazioni da parte della CPU.
@@ -13,7 +13,7 @@ Successivamente, per garantire uniformità nelle opzioni di modifica disponibili
 \begin{itemize}
     \item ridimensionamento;
     \item rotazione di 90°;
-    \item ribaltamento in orizzantale;
+    \item ribaltamento in orizzontale;
     \item conversione in bianco e nero;
     \item regolazione del contrasto;
     \item modifica della luminosità;
@@ -49,13 +49,13 @@ Tale pagina eseguirà una richiesta AJAX al server, inviando il file da elaborar
 \end{figure}
 \subsection{Actix-Web}
 Lo studio del funzionamento del framework Actix-Web ha costituito un punto focale durante la fase iniziale dell'implementazione.
-\\Tale framework si è dimostrato estremamente flessibile ed adatto per lo sviluppo del prototipo in questione.
+\\Tale framework si è dimostrato estremamente flessibile e adatto per lo sviluppo del prototipo in questione.
 Grazie all'impiego di \textbf{extractors}, di \textbf{handlers} e di altre funzionalità integrate, la gestione di richieste HTTP è risultata intuitiva e diretta.
 \\Al fine di garantire un codice più ordinato e manutenibile è stata presa la decisione di strutturare l'applicazione in diversi file.
 Tra questi, il file primario è \textbf{main.rs}, che svolge un ruolo centrale nell'architettura complessiva.
 \subsubsection{Configurazione server}
 
-\begin{lstlisting}[language=rust, label=lst:RustWasi, caption={Porzione del file main.rs}, showstringspaces=false]
+\begin{lstlisting}[language=rust, caption={Porzione del file main.rs}, showstringspaces=false]
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
@@ -332,7 +332,7 @@ app.post('/upload', upload.single('image'), (req, res) => {
   }
 }
 \end{lstlisting}
-Il file è aperto mediante l'impego del metodo \textbf{Jimp.read()}, il quale fornisce un'istanza utilizzabile per moodificare l'immagine secondo specifiche.
+Il file è aperto mediante l'impego del metodo \textbf{Jimp.read()}, il quale fornisce un'istanza utilizzabile per modificare l'immagine secondo specifiche.
 Quest'ultime possono essere acquisite  tramite l'oggetto req.body, passato alla callback function \emph{app.post('/upload',...)}.
 \\Dopo aver apportato le opportune modifiche all'immagine, essa viene salvata nella cartella "img/modified" con un nuovo nome al fine di garantire univocità tra i vari file.
 \\Infine, se tutte le operazioni precedenti vengono eseguite correttamente, verrà restituito all'utente il percorso dell'immagine modificata. In caso contrario, verrà restituito un messaggio di errore.
@@ -363,7 +363,7 @@ Per quanto riguarda i software utilizzati, sono state scelte le ultime versioni 
     \item Wasmtime 11.0
     \item Node 18.17.1 (LTS)
 \end{itemize}
-Il seguente setup, pur non essendo propriamente tipico di un server, ha comunque permesso di osservare differenze notevoli tra i due apprrocci esaminati.
+Il seguente setup, pur non essendo propriamente tipico di un server, ha comunque permesso di osservare differenze notevoli tra i due approcci esaminati.
 \section{Valutazione delle prestazioni}
 Per ottenere un campione di risultati affidabile sono state eseguite 10 misurazioni per ogni immagine.
 In seguito sono stato calcolati il \textbf{valore medio} del campione, ottenuto come media aritmetica e la \textbf{deviazione standard}:
@@ -383,7 +383,7 @@ Il primo parametro misurato è stato quello della latenza.
     E[X]_{medium}&=1487ms, & \sigma_X=144.99ms\\
     E[X]_{large}&=4212ms,  & \sigma_X=169.95ms
 \end{align*}
-Relativemente a Node.js invece:
+Relativamente a Node.js invece:
 \begin{align*}
     E[X]_{small}&=704ms,  & \sigma_X=79.19ms\\
     E[X]_{medium}&=3081ms, & \sigma_X=240.58ms\\
@@ -412,13 +412,13 @@ In seguito è stato misurato l'utilizzo della CPU per ciascuno dei due approcci 
     E[X]_{medium}&=55.35\%, & \sigma_X=3.64\%\\
     E[X]_{large}&=82.44\%,  & \sigma_X=1.93\%
 \end{align*}
-Relativemente a Node.js, invece:
+Relativamente a Node.js, invece:
 \begin{align*}
     E[X]_{small}&=20.87\%,  & \sigma_X=6.89\%\\
     E[X]_{medium}&=16.33\%, & \sigma_X=3.81\%\\
     E[X]_{large}&=18.96\%,  & \sigma_X=2.67\%
 \end{align*}
-Come si può notare, in questo secondo test sono stati ottenuti risultati sostanzialmente differenti dal preceddente.
+Come si può notare, in questo secondo test sono stati ottenuti risultati sostanzialmente differenti dal precedente.
 \\Nell'approccio basato su WebAssembly si può notare un utilizzo di CPU direttamente proporzionale alla dimensione dell'immagine elaborata, mentre utilizzando Node.js l'utilizzo rimane pressochè costante per tutte e tre le immagini esaminate.
 \\Questi risultati mettono in luce come Rust, combinato con WebAssembly, riesca a sfruttare appieno le capacità computazionali della macchina quando le circostanze lo richiedono.
 \\Al contrario, Node.js dimostra limitazioni nell'impiego ottimale della CPU, traducendosi in tempi di latenza maggiori per richieste ad alta intensità computazionale.
@@ -450,7 +450,7 @@ Per quanto riguarda Node.js, invece:
     E[X]_{large}&=79.92\text{MB},  & \sigma_X=1.55\text{MB}\\
 \end{align*}
 Durante quest'ultima analisi, i risultati ottenuti sono stati molto simili per entrambi gli approcci, ma sostanzialmente differenti rispetto ai test precedenti.
-\\In particolare, Node.js presenta un consumo di memoria leggermnete maggiore, ma in entrambi i casi, tale parametro viene mantenuto pressochè costante per ciascuna tipologia di immagine, non presentando differenze significative.
+\\In particolare, Node.js presenta un consumo di memoria leggermente maggiore, ma in entrambi i casi, tale parametro viene mantenuto pressochè costante per ciascuna tipologia di immagine, non presentando differenze significative.
 \newpage
 \begin{figure}
     \begin{center}
