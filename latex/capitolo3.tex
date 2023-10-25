@@ -35,7 +35,7 @@ Tali operazioni sono state selezionate poiché rappresentano funzionalità frequ
 \section{Implementazione in Rust e Wasm/WASI}
 Per quanto riguarda l'implementazione si è deciso di partire dal prototipo sviluppato in Rust poiché rappresentava l'aspetto più innovativo e richiedeva un considerevole impegno in termini di tempo.
 \\Si è resa inoltre necessaria la ricerca di un framework che consentisse la creazione di un Web server per la gestione delle richieste utente.
-\\La scelta è ricaduta su actix-web, un Web framework potente ed estremamente veloce per Rust.
+\\La scelta è ricaduta su Actix-Web, un Web framework potente ed estremamente veloce per Rust.
 \\Il client è costituito da una semplice pagina HTML contenente un form per il caricamento delle immagini e due riquadri che mostrano l'immagine pre e post modifiche.
 Tale pagina eseguirà una richiesta AJAX al server, inviando il file da elaborare e le relative specifiche sulle modifiche.
 \\Terminata l'elaborazione il server restituirà il percorso della nuova immagine pronta per essere scaricata.
@@ -373,7 +373,7 @@ In seguito sono stato calcolati il \textbf{valore medio} del campione, ottenuto 
 \begin{equation*}
     \sigma_X = \sqrt{\frac{1}{n}\sum_{i=0}^{n}(x_i-E[x])^2}
 \end{equation*}
-Successivamente verranno presentati i grafici per ciascuno dei parametri scelti, utilizzando rispettivamente Rust in combinazione con WebAssembly e Node.js. Ogni grafico conterrà i risultati per ognuna delle tre immagini utilizzati, consentendo così anche una facile analisi visiva.
+Successivamente verranno presentati i grafici per ciascuno dei parametri scelti, utilizzando rispettivamente Rust in combinazione con WebAssembly e Node.js. Ogni grafico conterrà i risultati per ognuna delle tre immagini utilizzate, consentendo così anche una facile analisi visiva.
 \subsection{Latenza}
 Il primo parametro misurato è stato quello della latenza.
 \\Nello specifico si è analizzato il tempo intercorso tra l'invio di una richiesta di elaborazione e la successiva risposta contenente il percorso della nuova immagine elaborata.
